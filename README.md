@@ -4,6 +4,8 @@ Thank you for watching!
 
 And I'm looking forward to making friends with you！
 
+If you have some questions, remember to contact me！
+
 ### Community
 SegmentFault: [云鱼Cloudy](https://segmentfault.com/u/cloudyttt)
 
