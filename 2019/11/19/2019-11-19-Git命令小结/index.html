@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html>
+  
+<head>
+  <meta charset="utf-8">
+  <meta name="author" content="Cloudy" />
+  
+
+  <title>2019-11-19-Git命令小结 | Cloudy&#39;s Blog</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="git,版本管理," />
+  
+
+  
+  <meta name="description" content="Cloudy&#39;s Blog">
+
+  
+
+  
+    <script src="//cdn.jsdelivr.net/npm/leancloud-storage@3.11.1/dist/av-min.js" async></script>
+  
+
+  
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+  
+
+  
+    <script src="//unpkg.com/valine/dist/Valine.min.js" async></script>
+  
+
+  
+
+  <script>
+  // theme-ad's config script
+  // it can be used in every script
+  
+  window.AD_CONFIG = {
+    leancloud: {"appid":"","appkey":"","comment":true,"count":true},
+    welcome: {"enable":false,"interval":30},
+    start_time: "2019-11-09",
+    passwords: ["efe07af7441da2b69c4a41e42e73be4db47f66010a56900788a458354a7373ec", ],
+    is_post: true,
+    lock: false,
+    author: "Cloudy",
+    share: {"twitter":true,"facebook":true,"weibo":true,"qq":true,"wechat":true},
+    mathjax: true,
+    page_type: "",
+    root: "/"
+  };
+</script>
+
+  <script src="/vendor/sha256.min.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/index.js"></script>
+<script src="/vendor/qrcode.min.js"></script>
+
+  
+    <link rel="icon" href="/images/favicon.ico">
+    <link rel="apple-touch-icon" href="/images/touch-icon.png">
+  
+
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="stylesheet" href="/styles/components/highlight/highlight.css">
+
+  
+</head>
+
+  <body>
+    <header class="site-header">
+  <div class="site-header-brand">
+    
+      <span class="site-header-brand-title">
+        <a href="/">首页</a>
+      </span>
+    
+    
+      <span class="site-header-brand-motto"> | 学无止境</span>
+    
+  </div>
+  <div class="site-header-right">
+    <nav class="site-header-navigation">
+      
+        <a href="/" target="_self">首页</a>
+      
+        <a href="/archives/" target="_self">归档</a>
+      
+        <a href="/tags/" target="_self">标签</a>
+      
+        <a href="/categories/" target="_self">分类</a>
+      
+        <a href="/friends/" target="_self">友链</a>
+      
+        <a href="/about/" target="_self">关于</a>
+      
+    </nav>
+    <div class="site-header-btn">
+      
+        <a href="https://github.com/Cloudyttt/" target="_blank" id="site-github">
+          <i class="fa fa-github-alt"></i>
+        </a>
+      
+      <a href="javascript:void(0);" target="_blank" rel="noopener" id="site-search">
+        <i class="fa fa-search"></i>
+      </a>
+      <a href="javascript:void(0);" target="_blank" rel="noopener" id="site-nav-btn">
+        <i class="fa fa-ellipsis-v"></i>
+      </a>
+    </div>
+  </div>
+</header>
+<nav class="table-content" id="site-nav">
+  <div class="table-content-title">
+    <span>导航</span>
+  </div>
+  <div class="table-content-main">
+    <ol class="toc">
+      
+        <li class="toc-item">
+          <a href="/" target="_self">
+            首页
+          </a>
+        </li>
+      
+        <li class="toc-item">
+          <a href="/archives/" target="_self">
+            归档
+          </a>
+        </li>
+      
+        <li class="toc-item">
+          <a href="/tags/" target="_self">
+            标签
+          </a>
+        </li>
+      
+        <li class="toc-item">
+          <a href="/categories/" target="_self">
+            分类
+          </a>
+        </li>
+      
+        <li class="toc-item">
+          <a href="/friends/" target="_self">
+            友链
+          </a>
+        </li>
+      
+        <li class="toc-item">
+          <a href="/about/" target="_self">
+            关于
+          </a>
+        </li>
+      
+    </ol>
+  </div>
+</nav>
+<div id="site-process"></div>
+    <main>
+      
+  <div class="passage">
+  <div class="passage-meta">
+    <span>
+      <i class="fa fa-calendar"></i>2019-11-19
+    </span>
+    
+    
+      <span>
+        | <i class="fa fa-unlock-alt"></i>UNLOCK
+      </span>
+    
+  </div>
+  <h1 class="passage-title">
+    2019-11-19-Git命令小结
+  </h1>
+  
+  <article class="passage-article">
+    <h1 id="Git"><a href="#Git" class="headerlink" title="Git"></a>Git</h1><h2 id="版本库原理"><a href="#版本库原理" class="headerlink" title="版本库原理"></a>版本库原理</h2><p>Git的版本库里存了很多东西，其中最重要的就是称为stage（或者叫index）的暂存区，还有Git为我们自动创建的第一个分支master，以及指向master的一个指针叫HEAD。<br>工作区有一个隐藏目录.git，这个不算工作区，而是Git的版本库</p>
+<p>![图片描述][1]</p>
+<h2 id="创建版本库："><a href="#创建版本库：" class="headerlink" title="创建版本库："></a>创建版本库：</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">#创建文件</span><br><span class="line">$ mkdir myapp</span><br><span class="line"></span><br><span class="line">#进入文件</span><br><span class="line">$ cd myapp</span><br><span class="line"></span><br><span class="line">#初始化代码仓库</span><br><span class="line">$ git init</span><br><span class="line"></span><br><span class="line">#把需要提交的所有修改放到暂存区（Stage）</span><br><span class="line">$ git add file</span><br><span class="line"></span><br><span class="line">#提交所有文件</span><br><span class="line">#$ git add . </span><br><span class="line"></span><br><span class="line">#提交所有.js格式文件</span><br><span class="line">#$ git add *.js</span><br><span class="line"></span><br><span class="line">#强制添加</span><br><span class="line">#$ git add -f file</span><br><span class="line"></span><br><span class="line">#提交代码</span><br><span class="line">$ git commit -m &quot;commit info&quot;</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="查看"><a href="#查看" class="headerlink" title="查看"></a>查看</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">#查看历史记录，git log命令显示从最近到最远的提交日志</span><br><span class="line">$ git log</span><br><span class="line"></span><br><span class="line">#查看分支合并图</span><br><span class="line">$ git log --graph</span><br><span class="line"></span><br><span class="line">#Git提供了一个命令git reflog用来记录你的每一次命令：</span><br><span class="line">$ git reflog</span><br><span class="line"></span><br><span class="line">#git status命令用于显示工作目录和暂存区的状态。使用此命令能看到那些修改被暂存到了, 哪些没有, 哪些文件没有被Git tracked到。git status不显示已经commit到项目历史中去的信息。</span><br><span class="line">$ git status</span><br><span class="line"></span><br><span class="line">#当暂存区中没有文件时，git diff比较的是，工作区中的文件与上次提交到版本库中的文件。</span><br><span class="line">#当暂存区中有文件时，git diff则比较的是，当前工作区中的文件与暂存区中的文</span><br><span class="line">$ git diff</span><br><span class="line"></span><br><span class="line">#比较工作区中的文件与版本库中文件的差异。HEAD指向的是版本库中的当前版本，而file指的是当前工作区中的文件。</span><br><span class="line">$ git diff HEAD -- file</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="版本回退："><a href="#版本回退：" class="headerlink" title="版本回退："></a>版本回退：</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">#Git必须知道当前版本是哪个版本，在Git中，用HEAD表示当前版本，上一个版本就是HEAD^，上上一个版本就是HEAD^^，当回退版本较早时可以写成HEAD~100。</span><br><span class="line"></span><br><span class="line">#版本回退</span><br><span class="line">$ git reset --hard HEAD^</span><br><span class="line"></span><br><span class="line">#取消回退，commitId为你想要回到的未来版本号</span><br><span class="line">$ git reset --hard commitId</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="撤销修改"><a href="#撤销修改" class="headerlink" title="撤销修改"></a>撤销修改</h2><p>命令git checkout  ——file 把文件在工作区的修改全部撤销，这里有两种情况：<br>    * 一种是file修改后还没有被放到暂存区，现在，撤销修改就回到和版本库一模一样的状态；<br>    * 一种是file已经添加到暂存区后，又作了修改，现在，撤销修改就回到添加到暂存区后的状态。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#文件在工作区的修改全部撤销</span><br><span class="line">$ git checkout --file</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="删除文件"><a href="#删除文件" class="headerlink" title="删除文件"></a>删除文件</h2><p>命令git rm用于从版本库删除一个文件。<br>如果一个文件已经被提交到版本库，那么你永远不用担心误删，但是要小心，你只能恢复文件到最新版本，你会丢失最近一次提交后你修改的内容。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#从版本库删除一个文件</span><br><span class="line">$ git rm file</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>提示：先手动删除文件，然后使用git rm <file>和git add<file>效果是一样的。</p>
+</blockquote>
+<h2 id="添加远程仓库"><a href="#添加远程仓库" class="headerlink" title="添加远程仓库"></a>添加远程仓库</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">#关联一个远程库</span><br><span class="line">$ git remote add origin &lt;address&gt;</span><br><span class="line">#第一次将本地库的所有内容推送到远程库上</span><br><span class="line">$ git push -u origin master [-f]</span><br><span class="line"></span><br><span class="line">#此后，每次本地提交后,就可以使用命令推送最新修改</span><br><span class="line">$ git push origin master</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="从远程库克隆"><a href="#从远程库克隆" class="headerlink" title="从远程库克隆"></a>从远程库克隆</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#</span><br><span class="line">git clone [url]</span><br></pre></td></tr></table></figure>
+
+<p>比如，要克隆 Ruby 语言的 Git 代码仓库 Grit，可以用下面的命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#这会在当前目录下创建一个名为grit的目录，其中包含一个.git的目录，用于保存下载下来的所有版本记录，然后从中取出最新版本的文件拷贝。如果进入这个新建的grit目录，你会看到项目中的所有文件已经在里边了，准备好后续的开发和使用。</span><br><span class="line"></span><br><span class="line">$ git clone git://github.com/schacon/grit.git</span><br></pre></td></tr></table></figure>
+
+<p>如果希望在克隆的时候，自己定义要新建的项目目录名称，可以在上面的命令末尾指定新的名字：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#唯一的差别就是，现在新建的目录成了mygrit，其他的都和上边的一样。</span><br><span class="line">$ git clone git://github.com/schacon/grit.git mygrit</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="分支管理"><a href="#分支管理" class="headerlink" title="分支管理"></a>分支管理</h2><p>![图片描述][2]</p>
+<p>创建+切换分支：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ git checkout -b &lt;name&gt;</span><br></pre></td></tr></table></figure>
+
+<p>创建分支：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ git branch &lt;name&gt;</span><br></pre></td></tr></table></figure>
+
+<p>切换分支</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ git checkout &lt;name&gt;</span><br></pre></td></tr></table></figure>
+
+<p>查看分支：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#git branch命令会列出所有分支，当前分支前面会标一个*号。</span><br><span class="line">$ git branch</span><br></pre></td></tr></table></figure>
+
+<p>切换分支</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#切换回master分支</span><br><span class="line">$ git checkout &lt;name&gt;</span><br></pre></td></tr></table></figure>
+
+<p>合并某分支到当前分支</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ git merge &lt;name&gt;</span><br></pre></td></tr></table></figure>
+
+<p>删除分支</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ git branch -d &lt;name&gt;</span><br></pre></td></tr></table></figure>
+
+<p>Git分支十分强大，在团队开发中应该充分应用。<br>合并分支时，加上—no-ff参数就可以用普通模式合并，合并后的历史有分支，能看出来曾经做过合并，而fast forward合并就看不出来曾经做过合并。</p>
+<h2 id="储藏"><a href="#储藏" class="headerlink" title="储藏"></a>储藏</h2><p><strong>储藏</strong>可以获取你工作目录的中间状态——也就是你修改过的被追踪的文件和暂存的变更——并将它保存到一个未完结变更的堆栈中，随时可以重新应用。</p>
+<p>现在你想切换分支，但是你还不想提交你正在进行中的工作；所以你储藏这些变更。为了往堆栈推送一个新的储藏，只要运行git stash。把所有未提交的修改（包括暂存的和非暂存的）都保存起来，用于后续恢复当前工作目录。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git stash</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>需要说明一点，stash是本地的，不会通过git push命令上传到git server上。</p>
+</blockquote>
+<p>查看现有的所有储藏，此命令显然暗示了git stash可以多次保存工作进度，并用在恢复时候选择。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ git stash list</span><br></pre></td></tr></table></figure>
+
+<p>重新应用已经实施的储藏（不删除储藏）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#如果你想应用更早的储藏，你可以通过名字指定它，像这样：git stash apply stash@&#123;2&#125;。如果你不指明，Git 默认使用最近的储藏并尝试应用它</span><br><span class="line">$ git stash apply [--index] [&lt;stash&gt;]</span><br></pre></td></tr></table></figure>
+
+<p>重新应用已经实施的储藏（删除储藏）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#如果不使用任何参数，会恢复最新保存的工作进度，并将恢复的工作进度从存储的工作进度列表中清除。</span><br><span class="line">#如果提供&lt;stash&gt;参数（来自git stash list显示的列表），则从该&lt;stash&gt;中恢复。恢复完毕也将从进度列表中删除&lt;stash&gt;。</span><br><span class="line">#选项--index除了恢复工作区的文件外，还尝试恢复暂存区。</span><br><span class="line">$ git stash pop [--index] [&lt;stash&gt;]</span><br></pre></td></tr></table></figure>
+
+<p>删除一个存储的进度。（默认删除最新的进度）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ git stash drop [&lt;stash&gt;]</span><br></pre></td></tr></table></figure>
+
+<p>清空当前所有的stash</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ git stash clear</span><br></pre></td></tr></table></figure>
+
+<p>基于储藏进度创建分支。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ git stash branch &lt;branchname&gt; &lt;stash&gt;</span><br></pre></td></tr></table></figure>
+
+<h2 id="多人协作"><a href="#多人协作" class="headerlink" title="多人协作"></a>多人协作</h2><p>查看远程库的信息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#或者用git remote -v 可显示更详细的信息</span><br><span class="line">$ git remote</span><br></pre></td></tr></table></figure>
+
+<p>推送分支，该分支上的所有本地提交推送到远程库</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ git push origin &lt;branch-name&gt;</span><br></pre></td></tr></table></figure>
+
+<p>从本地推送分支，如果推送失败，先抓取远程的新提交：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ git pull</span><br></pre></td></tr></table></figure>
+
+<hr>
+<p><strong>推荐阅读：</strong><br>[2019年前端面试题-01][1]<br>[2019年前端面试题-02][2]<br>[2019年前端面试题-03][3]<br>[2019年前端笔试题][4]<br>  [1]: <a href="https://segmentfault.com/a/1190000019411134" target="_blank" rel="noopener">https://segmentfault.com/a/1190000019411134</a><br>  [2]: <a href="https://segmentfault.com/a/1190000019414129" target="_blank" rel="noopener">https://segmentfault.com/a/1190000019414129</a><br>  [3]: <a href="https://segmentfault.com/a/1190000019418068" target="_blank" rel="noopener">https://segmentfault.com/a/1190000019418068</a><br>  [4]: <a href="https://segmentfault.com/a/1190000019465574" target="_blank" rel="noopener">https://segmentfault.com/a/1190000019465574</a></p>
+<hr>
+<blockquote>
+<p><strong>我是Cloudy，年轻的前端攻城狮一枚，爱专研，爱技术，爱分享。</strong><br><strong>个人笔记，整理不易，感谢阅读、点赞和收藏。</strong><br><strong>文章有任何问题欢迎大家指出，也欢迎大家一起交流前端各种问题！</strong></p>
+</blockquote>
+
+  </article>
+  <aside class="table-content" id="site-toc">
+  <div class="table-content-title">
+    <i class="fa fa-arrow-right fa-lg" id="site-toc-hide-btn"></i>
+    <span>目录</span>
+  </div>
+  <div class="table-content-main">
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Git"><span class="toc-text">Git</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#版本库原理"><span class="toc-text">版本库原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#创建版本库："><span class="toc-text">创建版本库：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#查看"><span class="toc-text">查看</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#版本回退："><span class="toc-text">版本回退：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#撤销修改"><span class="toc-text">撤销修改</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#删除文件"><span class="toc-text">删除文件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#添加远程仓库"><span class="toc-text">添加远程仓库</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#从远程库克隆"><span class="toc-text">从远程库克隆</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#分支管理"><span class="toc-text">分支管理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#储藏"><span class="toc-text">储藏</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#多人协作"><span class="toc-text">多人协作</span></a></li></ol></li></ol>
+  </div>
+</aside>
+  
+    <aside class="passage-copyright">
+      <div>本文作者: Cloudy</div>
+      
+        <div>
+          原文链接: 
+          <a href="" target="_blank">http://yoursite.com/2019/11/19/2019-11-19-Git%E5%91%BD%E4%BB%A4%E5%B0%8F%E7%BB%93/</a>
+        </div>
+      
+      <div>
+        版权声明: 本博客所有文章除特别声明外, 均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener">CC BY-NC-SA 4.0</a> 许可协议. 转载请注明出处!
+      </div>
+    </aside>
+  
+  
+    <div class="passage-tags">
+     
+      <a href="/tags/git/"><i class="fa fa-tags"></i>git</a>
+     
+      <a href="/tags/%E7%89%88%E6%9C%AC%E7%AE%A1%E7%90%86/"><i class="fa fa-tags"></i>版本管理</a>
+    
+    </div>
+  
+</div>
+
+    </main>
+    
+      
+<div class="site-comment-contanier" data-plateform="leancloud">
+  
+    <p id="site-comment-info">
+      <i class="fa fa-spinner fa-spin"></i> 评论加载中
+    </p>
+    <div id="site-comment"></div>
+  
+</div>
+    
+    <div class="site-footer-wrapper">
+  <footer class="site-footer">
+    
+      
+        <div class="site-footer-col">
+          <h5 class="site-footer-title">博客推荐</h5>
+          
+            <span class="site-footer-item">
+              <a href="https://github.com/Cloudyttt/Cloudyttt.github.io" target="_blank">Cloudyttt</a>
+            </span>
+          
+            <span class="site-footer-item">
+              <a href="https://github.com/Cloudyttt/Cloudyttt.github.io" target="_blank">Cloudy</a>
+            </span>
+          
+        </div>
+      
+        <div class="site-footer-col">
+          <h5 class="site-footer-title">系列教程</h5>
+          
+            <span class="site-footer-item">
+              <a href="https://cn.vuejs.org/" target="_blank">Vue</a>
+            </span>
+          
+            <span class="site-footer-item">
+              <a href="http://nodejs.cn/" target="_blank">Nodejs</a>
+            </span>
+          
+        </div>
+      
+        <div class="site-footer-col">
+          <h5 class="site-footer-title">抓到我</h5>
+          
+            <span class="site-footer-item">
+              <a href="https://juejin.im/user/5acdb1af5188257cc20da3f4" target="_blank">掘金</a>
+            </span>
+          
+            <span class="site-footer-item">
+              <a href="https://segmentfault.com/u/cloudyttt" target="_blank">思否</a>
+            </span>
+          
+        </div>
+      
+    
+    <div class="site-footer-info">
+      <i class="fa fa-clock-o"></i> 本站已稳定运行<span id="site-time"></span>
+    </div>
+    
+      <div class="site-footer-info">
+        <i class="fa fa-paw"></i> 您是本站第 <span id="site-count"></span> 位访客
+      </div>
+    
+    
+      <div class="site-footer-info">
+        <i class="fa fa-at"></i> Email: cloudyhaotian@qq.com
+      </div>
+    
+    <div class="site-footer-info">
+      <i class="fa fa-copyright"></i> 
+      2019 <a href="https://github.com/dongyuanxin/theme-ad/" target="_blank">Theme-AD</a>.
+      Created by <a href="https://godbmw.com/" target="_blank">GodBMW</a>.
+      All rights reserved.
+    </div>
+  </footer>
+</div>
+    <div id="site-layer" style="display:none;">
+  <div class="site-layer-content">
+    <div class="site-layer-header">
+      <span class="site-layer-header-title" id="site-layer-title"></span>
+      <i class="fa fa-close" id="site-layer-close"></i>
+    </div>
+    <div class="site-layer-body" id="site-layer-container">
+      <div class="site-layer-input" id="site-layer-search" style="display: none;">
+        <div class="site-layer-input-choose">
+          <a href="javascript:void(0);" target="_blank" rel="noopener" title="Change Search Engine">Google</a>
+        </div>
+        <input type="text">
+        <i class="fa fa-search"></i>
+      </div>
+      
+        <div class="site-layer-reward" id="site-layer-reward" style="display: none;">
+          
+            <div>
+              <img src="/images/wechat.jpeg" alt="WeChat">
+              
+                <p>WeChat</p>
+              
+            </div>
+          
+            <div>
+              <img src="/images/alipay.jpeg" alt="AliPay">
+              
+                <p>AliPay</p>
+              
+            </div>
+          
+        </div>
+      
+      <div id="site-layer-welcome" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+    
+
+<div class="bottom-bar">
+  <div class="bottom-bar-left">
+    <a href="javascript:void(0);" target="_blank" rel="noopener" data-enable="false">
+      <i class="fa fa-arrow-left"></i>
+    </a>
+    <a href="/2019/11/09/2019-11-08-es6Promise-md/" data-enable="true">
+      <i class="fa fa-arrow-right"></i>
+    </a>
+  </div>
+  <div class="bottom-bar-right">
+    <a href="javascript:void(0);" target="_blank" rel="noopener" data-enable="true" id="site-toc-show-btn">
+      <i class="fa fa-bars"></i>
+    </a>
+    
+      <a href="#site-comment" data-enable="true">
+        <i class="fa fa-commenting"></i>
+      </a>
+    
+    <a href="javascript:void(0);" target="_blank" rel="noopener" id="site-toggle-share-btn">
+      <i class="fa fa-share-alt"></i>
+    </a>
+    
+      <a href="javascript:void(0);" target="_blank" rel="noopener" id="site-reward">
+        <i class="fa fa-thumbs-up"></i>
+      </a>
+    
+    <a href="javascript:void(0);" target="_blank" rel="noopener" id="back-top-btn">
+      <i class="fa fa-chevron-up"></i>
+    </a>
+  </div>
+</div>
+    <div id="share-btn">
+  
+    <a id="share-btn-twitter" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-twitter"></i>
+    </a>
+  
+  
+    <a id="share-btn-facebook" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-facebook"></i>
+    </a>
+  
+  
+    <a id="share-btn-weibo" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-weibo"></i>
+    </a>
+  
+  
+    <a id="share-btn-qq" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-qq"></i>
+    </a>
+  
+  
+    <a id="share-btn-wechat" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-wechat"></i>
+    </a>
+  
+</div>
+    
+
+
+
+
+
+    
+  </body>
+</html>
