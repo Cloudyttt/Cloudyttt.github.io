@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html>
+  
+<head>
+  <meta charset="utf-8">
+  <meta name="author" content="Cloudy" />
+  
+
+  <title>2019-11-29-JSONP跨域 | Cloudy&#39;s Blog</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="JSONP,跨域,JavaScript," />
+  
+
+  
+  <meta name="description" content="Cloudy&#39;s Blog">
+
+  
+
+  
+    <script src="//cdn.jsdelivr.net/npm/leancloud-storage@3.11.1/dist/av-min.js" async></script>
+  
+
+  
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+  
+
+  
+    <script src="//unpkg.com/valine/dist/Valine.min.js" async></script>
+  
+
+  
+
+  <script>
+  // theme-ad's config script
+  // it can be used in every script
+  
+  window.AD_CONFIG = {
+    leancloud: {"appid":"","appkey":"","comment":true,"count":true},
+    welcome: {"enable":false,"interval":30},
+    start_time: "2019-11-09",
+    passwords: ["efe07af7441da2b69c4a41e42e73be4db47f66010a56900788a458354a7373ec", ],
+    is_post: true,
+    lock: false,
+    author: "Cloudy",
+    share: {"twitter":true,"facebook":true,"weibo":true,"qq":true,"wechat":true},
+    mathjax: true,
+    page_type: "",
+    root: "/"
+  };
+</script>
+
+  <script src="/vendor/sha256.min.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/index.js"></script>
+<script src="/vendor/qrcode.min.js"></script>
+
+  
+    <link rel="icon" href="/images/favicon.ico">
+    <link rel="apple-touch-icon" href="/images/touch-icon.png">
+  
+
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="stylesheet" href="/styles/components/highlight/highlight.css">
+
+  
+</head>
+
+  <body>
+    <header class="site-header">
+  <div class="site-header-brand">
+    
+      <span class="site-header-brand-title">
+        <a href="/">首页</a>
+      </span>
+    
+    
+      <span class="site-header-brand-motto"> | 学无止境</span>
+    
+  </div>
+  <div class="site-header-right">
+    <nav class="site-header-navigation">
+      
+        <a href="/" target="_self">首页</a>
+      
+        <a href="/archives/" target="_self">归档</a>
+      
+        <a href="/tags/" target="_self">标签</a>
+      
+        <a href="/categories/" target="_self">分类</a>
+      
+        <a href="/friends/" target="_self">友链</a>
+      
+        <a href="/about/" target="_self">关于</a>
+      
+    </nav>
+    <div class="site-header-btn">
+      
+        <a href="https://github.com/Cloudyttt/" target="_blank" id="site-github">
+          <i class="fa fa-github-alt"></i>
+        </a>
+      
+      <a href="javascript:void(0);" target="_blank" rel="noopener" id="site-search">
+        <i class="fa fa-search"></i>
+      </a>
+      <a href="javascript:void(0);" target="_blank" rel="noopener" id="site-nav-btn">
+        <i class="fa fa-ellipsis-v"></i>
+      </a>
+    </div>
+  </div>
+</header>
+<nav class="table-content" id="site-nav">
+  <div class="table-content-title">
+    <span>导航</span>
+  </div>
+  <div class="table-content-main">
+    <ol class="toc">
+      
+        <li class="toc-item">
+          <a href="/" target="_self">
+            首页
+          </a>
+        </li>
+      
+        <li class="toc-item">
+          <a href="/archives/" target="_self">
+            归档
+          </a>
+        </li>
+      
+        <li class="toc-item">
+          <a href="/tags/" target="_self">
+            标签
+          </a>
+        </li>
+      
+        <li class="toc-item">
+          <a href="/categories/" target="_self">
+            分类
+          </a>
+        </li>
+      
+        <li class="toc-item">
+          <a href="/friends/" target="_self">
+            友链
+          </a>
+        </li>
+      
+        <li class="toc-item">
+          <a href="/about/" target="_self">
+            关于
+          </a>
+        </li>
+      
+    </ol>
+  </div>
+</nav>
+<div id="site-process"></div>
+    <main>
+      
+  <div class="passage">
+  <div class="passage-meta">
+    <span>
+      <i class="fa fa-calendar"></i>2019-11-29
+    </span>
+    
+    
+      <span>
+        | <i class="fa fa-unlock-alt"></i>UNLOCK
+      </span>
+    
+  </div>
+  <h1 class="passage-title">
+    2019-11-29-JSONP跨域
+  </h1>
+  
+  <article class="passage-article">
+    <h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><p>Jsonp是一种跨域通信的手段<br>原理：<br>事先定义一个用于获取跨域响应数据的回调函数，并通过没有同源策略限制的script标签发起一个请求（将回调函数的名称放到这个请求的query参数里），然后服务端返回这个回调函数的执行，并将需要响应的数据放到回调函数的参数里，前端的script标签请求到这个执行的回调函数后会立马执行，于是就拿到了执行的响应数据。</p>
+<p>缺点：<br>JSONP只能发起GET请求</p>
+<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><ol>
+<li><p>设定一个script标签</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&lt;script src=<span class="string">"http://jsonp.js?callback=cb"</span>&gt;<span class="xml"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 或</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> script = <span class="built_in">document</span>.createElement(<span class="string">'script'</span>);</span><br><span class="line">script.src = <span class="string">"http://jsonp.js?callback=cb"</span>;</span><br><span class="line">body.append(script)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>callback定义了一个函数名，而远程服务端通过调用指定的函数并传入参数来实现传递参数，将function(response)传递回客户端</p>
+</li>
+</ol>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">router.get(<span class="string">'/'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">req, res, next</span>) </span>&#123;</span><br><span class="line">  (<span class="function"><span class="params">()</span>=&gt;</span>&#123;</span><br><span class="line">    <span class="keyword">const</span> data = &#123;</span><br><span class="line">      x: <span class="number">10</span>,</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="keyword">let</span> params = req.query;</span><br><span class="line">    <span class="keyword">if</span>(params.callback)&#123;</span><br><span class="line">      <span class="keyword">let</span> callback = params.callback;</span><br><span class="line">      <span class="built_in">console</span>.log(params.callback);</span><br><span class="line">      res.send(<span class="string">`<span class="subst">$&#123;callback&#125;</span>(<span class="subst">$&#123;<span class="built_in">JSON</span>.stringify(data.x)&#125;</span>)`</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      res.send(<span class="string">'err'</span>)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;)();</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>客户端接收到返回的js脚本，开始解析和执行function(response)</li>
+</ol>
+<h2 id="简单的实例："><a href="#简单的实例：" class="headerlink" title="简单的实例："></a>简单的实例：</h2><p>一个简单的jsonp实现，其实就是拼接url，然后将动态添加一个script元素到头部。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">jsonp</span>(<span class="params">req</span>)</span>&#123;</span><br><span class="line">    <span class="keyword">var</span> script = <span class="built_in">document</span>.createElement(<span class="string">'script'</span>);</span><br><span class="line">    <span class="keyword">var</span> url = req.url + <span class="string">'?callback='</span> + req.callback.name;</span><br><span class="line">    script.src = url;</span><br><span class="line">    <span class="built_in">document</span>.getElementsByTagName(<span class="string">'head'</span>)[<span class="number">0</span>].appendChild(script); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>前端js示例：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">hello</span>(<span class="params">res</span>)</span>&#123;</span><br><span class="line">    alert(<span class="string">'hello '</span> + res.data);</span><br><span class="line">&#125;</span><br><span class="line">jsonp(&#123;</span><br><span class="line">    url : <span class="string">''</span>,</span><br><span class="line">    callback : hello </span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>服务器端代码：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> http = <span class="built_in">require</span>(<span class="string">'http'</span>);</span><br><span class="line"><span class="keyword">var</span> urllib = <span class="built_in">require</span>(<span class="string">'url'</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> port = <span class="number">8080</span>;</span><br><span class="line"><span class="keyword">var</span> data = &#123;<span class="string">'data'</span>:<span class="string">'world'</span>&#125;;</span><br><span class="line"></span><br><span class="line">http.createServer(<span class="function"><span class="keyword">function</span>(<span class="params">req,res</span>)</span>&#123;</span><br><span class="line">    <span class="keyword">var</span> params = urllib.parse(req.url,<span class="literal">true</span>);</span><br><span class="line">    <span class="keyword">if</span>(params.query.callback)&#123;</span><br><span class="line">        <span class="built_in">console</span>.log(params.query.callback);</span><br><span class="line">        <span class="comment">//jsonp</span></span><br><span class="line">        <span class="keyword">var</span> str = params.query.callback + <span class="string">'('</span> + <span class="built_in">JSON</span>.stringify(data) + <span class="string">')'</span>;</span><br><span class="line">        res.end(str);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        res.end();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">&#125;).listen(port,<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">    <span class="built_in">console</span>.log(<span class="string">'jsonp server is on'</span>);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>可靠的jsonp实例：<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">(<span class="function"><span class="keyword">function</span> (<span class="params">global</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> id = <span class="number">0</span>,</span><br><span class="line">        container = <span class="built_in">document</span>.getElementsByTagName(<span class="string">"head"</span>)[<span class="number">0</span>];</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">function</span> <span class="title">jsonp</span>(<span class="params">options</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(!options || !options.url) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">var</span> scriptNode = <span class="built_in">document</span>.createElement(<span class="string">"script"</span>),</span><br><span class="line">            data = options.data || &#123;&#125;,</span><br><span class="line">            url = options.url,</span><br><span class="line">            callback = options.callback,</span><br><span class="line">            fnName = <span class="string">"jsonp"</span> + id++;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 添加回调函数</span></span><br><span class="line">        data[<span class="string">"callback"</span>] = fnName;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 拼接url</span></span><br><span class="line">        <span class="keyword">var</span> params = [];</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">var</span> key <span class="keyword">in</span> data) &#123;</span><br><span class="line">            params.push(<span class="built_in">encodeURIComponent</span>(key) + <span class="string">"="</span> + <span class="built_in">encodeURIComponent</span>(data[key]));</span><br><span class="line">        &#125;</span><br><span class="line">        url = url.indexOf(<span class="string">"?"</span>) &gt; <span class="number">0</span> ? (url + <span class="string">"&amp;"</span>) : (url + <span class="string">"?"</span>);</span><br><span class="line">        url += params.join(<span class="string">"&amp;"</span>);</span><br><span class="line">        scriptNode.src = url;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 传递的是一个匿名的回调函数，要执行的话，暴露为一个全局方法</span></span><br><span class="line">        global[fnName] = <span class="function"><span class="keyword">function</span> (<span class="params">ret</span>) </span>&#123;</span><br><span class="line">            callback &amp;&amp; callback(ret);</span><br><span class="line">            container.removeChild(scriptNode);</span><br><span class="line">            <span class="keyword">delete</span> global[fnName];</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 出错处理</span></span><br><span class="line">        scriptNode.onerror = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">            callback &amp;&amp; callback(&#123;<span class="attr">error</span>:<span class="string">"error"</span>&#125;);</span><br><span class="line">            container.removeChild(scriptNode);</span><br><span class="line">            global[fnName] &amp;&amp; <span class="keyword">delete</span> global[fnName];</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        scriptNode.type = <span class="string">"text/javascript"</span>;</span><br><span class="line">        container.appendChild(scriptNode)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    global.jsonp = jsonp;</span><br><span class="line"></span><br><span class="line">&#125;)(<span class="keyword">this</span>);</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<p>使用示例：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">jsonp(&#123;</span><br><span class="line">    url : <span class="string">"www.example.com"</span>,</span><br><span class="line">    data : &#123;<span class="attr">id</span> : <span class="number">1</span>&#125;,</span><br><span class="line">    callback : <span class="function"><span class="keyword">function</span> (<span class="params">ret</span>) </span>&#123;</span><br><span class="line">        <span class="built_in">console</span>.log(ret);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h2 id="JSONP安全性问题"><a href="#JSONP安全性问题" class="headerlink" title="JSONP安全性问题"></a>JSONP安全性问题</h2><h5 id="CSRF攻击"><a href="#CSRF攻击" class="headerlink" title="CSRF攻击"></a>CSRF攻击</h5><p>前端构造一个恶意页面，请求JSONP接口，收集服务端的敏感信息。如果JSONP接口还涉及一些敏感操作或信息（比如登录、删除等操作），那就更不安全了。</p>
+<p>解决方法：验证JSONP的调用来源（Referer），服务端判断Referer是否是白名单，或者部署随机Token来防御。</p>
+<h5 id="XSS漏洞"><a href="#XSS漏洞" class="headerlink" title="XSS漏洞"></a>XSS漏洞</h5><p>不严谨的 content-type导致的 XSS 漏洞，想象一下 JSONP 就是你请求 <a href="http://youdomain.com?callback=douniwan" target="_blank" rel="noopener">http://youdomain.com?callback=douniwan</a>, 然后返回 douniwan({ data })，那假如请求 <a href="http://youdomain.com?callback=" target="_blank" rel="noopener">http://youdomain.com?callback=</a><script>alert(1)</script> 不就返回 <script>alert(1)</script>({ data })了吗，如果没有严格定义好 Content-Type（ Content-Type: application/json ），再加上没有过滤 callback 参数，直接当 html 解析了，就是一个赤裸裸的 XSS 了。</p>
+<p>解决方法：严格定义 Content-Type: application/json，然后严格过滤 callback 后的参数并且限制长度（进行字符转义，例如&lt;换成&amp;lt，&gt;换成&amp;gt）等，这样返回的脚本内容会变成文本格式，脚本将不会执行。</p>
+<h3 id="服务器被黑，返回一串恶意执行的代码"><a href="#服务器被黑，返回一串恶意执行的代码" class="headerlink" title="服务器被黑，返回一串恶意执行的代码"></a>服务器被黑，返回一串恶意执行的代码</h3><p>可以将执行的代码转发到服务端进行校验JSONP内容校验，再返回校验结果。</p>
+
+  </article>
+  <aside class="table-content" id="site-toc">
+  <div class="table-content-title">
+    <i class="fa fa-arrow-right fa-lg" id="site-toc-hide-btn"></i>
+    <span>目录</span>
+  </div>
+  <div class="table-content-main">
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#原理"><span class="toc-text">原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#实现"><span class="toc-text">实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#简单的实例："><span class="toc-text">简单的实例：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#JSONP安全性问题"><span class="toc-text">JSONP安全性问题</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#CSRF攻击"><span class="toc-text">CSRF攻击</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#XSS漏洞"><span class="toc-text">XSS漏洞</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#服务器被黑，返回一串恶意执行的代码"><span class="toc-text">服务器被黑，返回一串恶意执行的代码</span></a></li></ol></li></ol>
+  </div>
+</aside>
+  
+    <aside class="passage-copyright">
+      <div>本文作者: Cloudy</div>
+      
+        <div>
+          原文链接: 
+          <a href="" target="_blank">http://yoursite.com/2019/11/29/JSONP%E8%B7%A8%E5%9F%9F/</a>
+        </div>
+      
+      <div>
+        版权声明: 本博客所有文章除特别声明外, 均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener">CC BY-NC-SA 4.0</a> 许可协议. 转载请注明出处!
+      </div>
+    </aside>
+  
+  
+    <div class="passage-tags">
+     
+      <a href="/tags/JSONP/"><i class="fa fa-tags"></i>JSONP</a>
+     
+      <a href="/tags/%E8%B7%A8%E5%9F%9F/"><i class="fa fa-tags"></i>跨域</a>
+     
+      <a href="/tags/JavaScript/"><i class="fa fa-tags"></i>JavaScript</a>
+    
+    </div>
+  
+</div>
+
+    </main>
+    
+      
+<div class="site-comment-contanier" data-plateform="leancloud">
+  
+    <p id="site-comment-info">
+      <i class="fa fa-spinner fa-spin"></i> 评论加载中
+    </p>
+    <div id="site-comment"></div>
+  
+</div>
+    
+    <div class="site-footer-wrapper">
+  <footer class="site-footer">
+    
+      
+        <div class="site-footer-col">
+          <h5 class="site-footer-title">博客推荐</h5>
+          
+            <span class="site-footer-item">
+              <a href="https://github.com/Cloudyttt/Cloudyttt.github.io" target="_blank">Cloudyttt</a>
+            </span>
+          
+            <span class="site-footer-item">
+              <a href="https://github.com/Cloudyttt/Cloudyttt.github.io" target="_blank">Cloudy</a>
+            </span>
+          
+        </div>
+      
+        <div class="site-footer-col">
+          <h5 class="site-footer-title">系列教程</h5>
+          
+            <span class="site-footer-item">
+              <a href="https://cn.vuejs.org/" target="_blank">Vue</a>
+            </span>
+          
+            <span class="site-footer-item">
+              <a href="http://nodejs.cn/" target="_blank">Nodejs</a>
+            </span>
+          
+        </div>
+      
+        <div class="site-footer-col">
+          <h5 class="site-footer-title">抓到我</h5>
+          
+            <span class="site-footer-item">
+              <a href="https://juejin.im/user/5acdb1af5188257cc20da3f4" target="_blank">掘金</a>
+            </span>
+          
+            <span class="site-footer-item">
+              <a href="https://segmentfault.com/u/cloudyttt" target="_blank">思否</a>
+            </span>
+          
+        </div>
+      
+    
+    <div class="site-footer-info">
+      <i class="fa fa-clock-o"></i> 本站已稳定运行<span id="site-time"></span>
+    </div>
+    
+      <div class="site-footer-info">
+        <i class="fa fa-paw"></i> 您是本站第 <span id="site-count"></span> 位访客
+      </div>
+    
+    
+      <div class="site-footer-info">
+        <i class="fa fa-at"></i> Email: cloudyhaotian@qq.com
+      </div>
+    
+    <!--<div class="site-footer-info">
+      <i class="fa fa-copyright"></i>
+      2019 <a href="https://github.com/dongyuanxin/theme-ad/" target="_blank">Theme-AD</a>.
+      Created by <a href="https://godbmw.com/" target="_blank">GodBMW</a>.
+      All rights reserved.
+    </div>-->
+  </footer>
+</div>
+
+    <div id="site-layer" style="display:none;">
+  <div class="site-layer-content">
+    <div class="site-layer-header">
+      <span class="site-layer-header-title" id="site-layer-title"></span>
+      <i class="fa fa-close" id="site-layer-close"></i>
+    </div>
+    <div class="site-layer-body" id="site-layer-container">
+      <div class="site-layer-input" id="site-layer-search" style="display: none;">
+        <div class="site-layer-input-choose">
+          <a href="javascript:void(0);" target="_blank" rel="noopener" title="Change Search Engine">Google</a>
+        </div>
+        <input type="text">
+        <i class="fa fa-search"></i>
+      </div>
+      
+        <div class="site-layer-reward" id="site-layer-reward" style="display: none;">
+          
+            <div>
+              <img src="/images/wechat.jpeg" alt="WeChat">
+              
+                <p>WeChat</p>
+              
+            </div>
+          
+            <div>
+              <img src="/images/alipay.jpeg" alt="AliPay">
+              
+                <p>AliPay</p>
+              
+            </div>
+          
+        </div>
+      
+      <div id="site-layer-welcome" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+    
+
+<div class="bottom-bar">
+  <div class="bottom-bar-left">
+    <a href="/2019/11/29/%E5%A6%82%E4%BD%95%E9%81%BF%E5%85%8D%E5%9B%9E%E6%B5%81%E5%92%8C%E9%87%8D%E7%BB%98/" data-enable="true">
+      <i class="fa fa-arrow-left"></i>
+    </a>
+    <a href="/2019/11/19/Git%E5%91%BD%E4%BB%A4%E5%B0%8F%E7%BB%93/" data-enable="true">
+      <i class="fa fa-arrow-right"></i>
+    </a>
+  </div>
+  <div class="bottom-bar-right">
+    <a href="javascript:void(0);" target="_blank" rel="noopener" data-enable="true" id="site-toc-show-btn">
+      <i class="fa fa-bars"></i>
+    </a>
+    
+      <a href="#site-comment" data-enable="true">
+        <i class="fa fa-commenting"></i>
+      </a>
+    
+    <a href="javascript:void(0);" target="_blank" rel="noopener" id="site-toggle-share-btn">
+      <i class="fa fa-share-alt"></i>
+    </a>
+    
+      <a href="javascript:void(0);" target="_blank" rel="noopener" id="site-reward">
+        <i class="fa fa-thumbs-up"></i>
+      </a>
+    
+    <a href="javascript:void(0);" target="_blank" rel="noopener" id="back-top-btn">
+      <i class="fa fa-chevron-up"></i>
+    </a>
+  </div>
+</div>
+    <div id="share-btn">
+  
+    <a id="share-btn-twitter" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-twitter"></i>
+    </a>
+  
+  
+    <a id="share-btn-facebook" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-facebook"></i>
+    </a>
+  
+  
+    <a id="share-btn-weibo" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-weibo"></i>
+    </a>
+  
+  
+    <a id="share-btn-qq" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-qq"></i>
+    </a>
+  
+  
+    <a id="share-btn-wechat" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-wechat"></i>
+    </a>
+  
+</div>
+    
+  <script async src="https://www.googletagmanager.com/gtag/js?id="></script>
+  <script async>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', '');
+  </script>
+
+
+
+  <script async>
+  (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      if (curProtocol === 'https') {
+          bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+      }
+      else {
+          bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+      }
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+  })();
+  </script>
+
+
+
+
+    
+  </body>
+</html>

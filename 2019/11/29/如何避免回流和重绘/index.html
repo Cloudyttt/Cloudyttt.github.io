@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html>
+  
+<head>
+  <meta charset="utf-8">
+  <meta name="author" content="Cloudy" />
+  
+
+  <title>2019-11-29-如何避免回流和重绘 | Cloudy&#39;s Blog</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="CSS,优化,浏览器,DOM,渲染," />
+  
+
+  
+  <meta name="description" content="Cloudy&#39;s Blog">
+
+  
+
+  
+    <script src="//cdn.jsdelivr.net/npm/leancloud-storage@3.11.1/dist/av-min.js" async></script>
+  
+
+  
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+  
+
+  
+    <script src="//unpkg.com/valine/dist/Valine.min.js" async></script>
+  
+
+  
+
+  <script>
+  // theme-ad's config script
+  // it can be used in every script
+  
+  window.AD_CONFIG = {
+    leancloud: {"appid":"","appkey":"","comment":true,"count":true},
+    welcome: {"enable":false,"interval":30},
+    start_time: "2019-11-09",
+    passwords: ["efe07af7441da2b69c4a41e42e73be4db47f66010a56900788a458354a7373ec", ],
+    is_post: true,
+    lock: false,
+    author: "Cloudy",
+    share: {"twitter":true,"facebook":true,"weibo":true,"qq":true,"wechat":true},
+    mathjax: true,
+    page_type: "",
+    root: "/"
+  };
+</script>
+
+  <script src="/vendor/sha256.min.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/index.js"></script>
+<script src="/vendor/qrcode.min.js"></script>
+
+  
+    <link rel="icon" href="/images/favicon.ico">
+    <link rel="apple-touch-icon" href="/images/touch-icon.png">
+  
+
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="stylesheet" href="/styles/components/highlight/highlight.css">
+
+  
+</head>
+
+  <body>
+    <header class="site-header">
+  <div class="site-header-brand">
+    
+      <span class="site-header-brand-title">
+        <a href="/">首页</a>
+      </span>
+    
+    
+      <span class="site-header-brand-motto"> | 学无止境</span>
+    
+  </div>
+  <div class="site-header-right">
+    <nav class="site-header-navigation">
+      
+        <a href="/" target="_self">首页</a>
+      
+        <a href="/archives/" target="_self">归档</a>
+      
+        <a href="/tags/" target="_self">标签</a>
+      
+        <a href="/categories/" target="_self">分类</a>
+      
+        <a href="/friends/" target="_self">友链</a>
+      
+        <a href="/about/" target="_self">关于</a>
+      
+    </nav>
+    <div class="site-header-btn">
+      
+        <a href="https://github.com/Cloudyttt/" target="_blank" id="site-github">
+          <i class="fa fa-github-alt"></i>
+        </a>
+      
+      <a href="javascript:void(0);" target="_blank" rel="noopener" id="site-search">
+        <i class="fa fa-search"></i>
+      </a>
+      <a href="javascript:void(0);" target="_blank" rel="noopener" id="site-nav-btn">
+        <i class="fa fa-ellipsis-v"></i>
+      </a>
+    </div>
+  </div>
+</header>
+<nav class="table-content" id="site-nav">
+  <div class="table-content-title">
+    <span>导航</span>
+  </div>
+  <div class="table-content-main">
+    <ol class="toc">
+      
+        <li class="toc-item">
+          <a href="/" target="_self">
+            首页
+          </a>
+        </li>
+      
+        <li class="toc-item">
+          <a href="/archives/" target="_self">
+            归档
+          </a>
+        </li>
+      
+        <li class="toc-item">
+          <a href="/tags/" target="_self">
+            标签
+          </a>
+        </li>
+      
+        <li class="toc-item">
+          <a href="/categories/" target="_self">
+            分类
+          </a>
+        </li>
+      
+        <li class="toc-item">
+          <a href="/friends/" target="_self">
+            友链
+          </a>
+        </li>
+      
+        <li class="toc-item">
+          <a href="/about/" target="_self">
+            关于
+          </a>
+        </li>
+      
+    </ol>
+  </div>
+</nav>
+<div id="site-process"></div>
+    <main>
+      
+  <div class="passage">
+  <div class="passage-meta">
+    <span>
+      <i class="fa fa-calendar"></i>2019-11-29
+    </span>
+    
+    
+      <span>
+        | <i class="fa fa-unlock-alt"></i>UNLOCK
+      </span>
+    
+  </div>
+  <h1 class="passage-title">
+    2019-11-29-如何避免回流和重绘
+  </h1>
+  
+  <article class="passage-article">
+    <h3 id="浏览器渲染过程"><a href="#浏览器渲染过程" class="headerlink" title="浏览器渲染过程"></a>浏览器渲染过程</h3><p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAnAAAAEhCAMAAADI921eAAAAvVBMVEVHcEwJDxcAAAACBAYAAAADBgkBAQIhNEosSWo6XopLea5Rgrs7YIw/ZpNPfrY6Xog7YYw6X4k1WoU2Wok3W4cEBAIuMzOcjq2+rdMYGhNneG+yo8ZZYmFETEt1h41DZ4+OsL5LbYmw1d+84uu43udigJemytY+YolVVQvR0i+Tkhuavs29y7CFn6RubRH//Ti1tShpjauuwbDX477V4r3M2bjB6fHg7MWxu52ZoYjn6DU6OgXL0jqWqE8uVY/z1VPHAAAAFXRSTlMASryW3St4Ch2jwf6RgONvTDT+5MBPTtVEAAAkwElEQVR42u2dC1viuhZAh5lhChR5FBInPU0tbS2PUuDad9H5/z/rfklRQUtpsZRx3Gs8IqAgss5OsrOTfPsGAAAA/D00vtdN49ovGbgmP1Dd/Lj2Swauyg+Eb3/XxS0B3748jZ9I/q8eFPQTGlSg+RPRWnzD6Hvz2i8W+Bv4gfDldYPmFHjhF0LqaWV+//6Abyoiv679MoG/hsZPpJxSRsGYplreUoz5t9P0h37T0z8M3TdgH+H7yWaVKKpMCG8clVsV4//+u0VYTaMXvs3/WYy+C9d+icDfxQ9E8q1hd/9mnhEez5Dy+xbJbLjxGyv5wt0SBM0p8JZT+RHu4y25vUW3vBklv2/RLbvxltzmCidDcwpkIDS/5+ZH0gBIbhXC+20K+n2L/sMy68nlCkchGwJkI+Q1q7fpXXgn3H8yF07G/93i2xzhWDYEum9AJsK3X4gczY+kTSq6VVEa4ViTyq/T/44LB9kQIJec/AgfNFD8339pzo6wQQO7garHhYNsCHCC1tH8CFFvVcysUwhTjKdFeGrk9phwtxh9b137BQF/O8c6chihNCHyn4IQH14w4X5j+vuIcDCZBRRBaPzMnOhi9UXPX+2muX4/T3hlTXpBNgQohlBJ/QhkQ4DCCB+uH7nFkA0BSvALoduP+IZgMgsoRZH6kaNANgQoTfN0/cgxIBsCnMPJ+pEjzSlBv6D7BpzBL1KkEPgNKvoJ3TfgPBrfS3fkIBsCfAA20VWmWWXZEOi+AR/gV5mOnAqlvcBHKbFQGiazgAo4UQj82pxC9w2ohkL5EagNASqjcXqhtIoQNKdAVZyc6FKgOQWqpJVbPwLZEKBqhJz6EagNAS7A0fwIZEOAS3BsoTRkQ4ALkbVQGmpDgAvybiM5FbpvwCV5kx+B0l7gwuzXj0A2BKiBl/oR2PYNqIVGWgisIgLNKVAHLD8CtSFAfbR+INj2DaiTH6h97V8B+EIIHbFz7d8B+EIw4aBFBWpDaINwQI2AcECtgHBArQhdEA6oERAOqBUQDqgVEA6oFeFG7IFwQG2AcECtgHBArYBwQK2AcECtgHBArYBwQK0IfRAOqBGhL4ogHFAbIBxQKyAcUCsgHFAfrc6AC9fqwUIaoAYGojjsi2LrRhRhZxHg4gjDntgZiGJTFNvQrAIXR2h1RbHDPnpNEA64PK1mT+R0QTigBoRWn/vWa0AXDqgDodlmwt20Kg9wg/OBYPvvIrQaPfESPbi+dD7da/9VgMshNG9EsVF9gOveaecygd2c/mVazU7nAiOG7kQ3DPOcf/o9CPdP0xpcYoTanVjmeXxh4Rq/zif7PRT6N+fSHZ7xCoo8X7fb7Vb/W4Bw5Wl9R+RMjp2xMZTuzmUqnfESutPJ3eTEx2Q6PfUtrx/TadFnBuFK0/o+m5/J4qhwtnUm92cI15LUZaU4037BpwbhytP6vlqfyeaocOe+Dcb/zhCufffgel7+B/vkeqe+i3+4/v2o6FODcOX59MK1pvduhXjugzQo+twgXHk+vXDt6YPrVanc/ajweBaEK8/FhTOM9JMRcHY37O54/vp84Yaj+7DiAHdT+MlBuPJcWjhD1UzT1BxTkzm2qTrpHY6qm7bzUeG60rLSABdORsWn+EG48lxauACrhmmo2HAoJZhSzULEYbHNRkQzVfpB4Voj9b1vyyiKlnwI4C93Xy2XnueyyyjXTs99mJaY5AThylOdcMP+Ll+aJRw1jCCgahAYFlIxu53K9DzhhP5epUV/unwfpDDBFMu+6/oUU4oV3/UIiriKGOWHQ+9+WmJGAoQrT3XC9cRe2vt5K1wQBCplQY2qhmlayMK2adpEx+cJNxDFzvNUgCDde9574WTXj7DieQpdul5EZNfDWAk9140p8nOFe5gW78GBcOdQnXCsyrE3eC8clWUZ7wunK6ppyIp5pnAtVr/bTeNQd/qQ0Q3Dcui6MfGXhIe1GPselnlowzHJFc5TpTJTriBceQ6FS+bcpHWy4czX802S3sEu53nCCa1GR+TB541wWFGUA+FMB5s61s6NcEKzy6rbWLsqZObgUuGWJIrIklnGLnDEboyInxfhPHdZYoh6KBwP2yfQLBDujXCbLZMLJclqNkOz2WI9Q+ndM7RYJ9v5W+EO57zbLPb0bgYnmlTTIppG9SPCDQpMxDOzxc7gW1fKysGlwvkkignr4HlLLlxM2B35woX3o1LVA++FM3jmJ+Cv/Pkav2oEJuvDgnDZwq3X6/mWfZ6tuGUJWmUKJ2YyzRo07AkXKFSWzSPCdcTCdEaTzMzGLsItIy7cLsKFJI6Imyucu5TKafBOOMPBRDE1hb1OxQxUTGTDNKhlGo5sKARTC4Q7LhyPbKvZYr1er1aLLOF+sIj2+t9ucVRHOiGcoSFi74TTdf1AOKHz8kj5n0Sx15YejgsXE2/Xh5Opx4STqaKEucKF99Ny5VHvhLOwZmFsEM0IFBzIxNEwDgxkG4aCA5VQWQfhDoUji8VicSAcczAhSXaEazb26fNOXL9xkPiljmEaDvt/3lC4cJjlRGhg6tQ2HYIx1Q4i3OFDZsPa7l67McoYoqbCeX7MPlG69LyYxK6HI3dJ0DI/wj1Mx+X+eO+b1CAINBIoNDCQZiE7MHSkBalwBjSp3zKEW61WqwPhEjJfL1brbOFazT06PVHs3DSaB30402L/U1vWy5em/Xzd0k3dtm1bPxDu4CEz6bMI1240+9LDEeEQwVT1XHdJCSY4dl0Px65HqZcvnCqVXEf4vknVKMbEtJHukEBDzECiPguXRngQ7kSTyj/mR4T7JrzCwlu30WwJH5u8F04xYGG00Wi2pPsj8vi+7/NKI9fzl0ufzTSwTz7/dDTx6y1LL2x5K5xhI013COtHKLKRCoccEG6f08LNERs/HBFuj06v02g2W8Klq0UGvR73uj91cmZRS8+veq5TNsC9EU7XDRkHhkNMwyHYMi02h6chK0ByoFMmnAzCFRBuvSWL9U64JDmeh2umul28PKnVaDSbgiCMJpVWJbn+tPReN/vCsYliRyOKQolp6oTqpqESRcGqwS9ZhFOJAqPUAsJt0DwVjiCCFscTv82WwN+xCwsntFrM677khBUa54VO8cLLZ/aE09liU9u0HU3XTFOnKrvRdhw+lNAcW7fZ9zgwSq2wWuQ5PlxaOK61MJ5UoNleg+qXHaLmTW3pRMt/pSBcBcI9U0vF70CquNDXmZYOcEeFMxx64pWCcJcSjlX5GmZBSgg3nviV+raclA9wORFOP/FKQbgLCRcoBGG1qHHFhRtIeUNUN+SUCYGOdMYabKgWKc+lhaPUdggNir0NxYUbT/Im4SOFExX3zT8nwIFwZ3Bx4ZQg0JBlaqpqG6ZlW6plOmydg2GrjvV8S1nhBnlDVM+LZBljWY5Cfs19Tcsd+RnP1coPUUG4s6hBOMNGlkpVhdiBSim2FaoqeuBgVd7dopUVThhP/dykbxgqchi6fhixKBdHoet5YRR7xyz17sbn7HUDwpWnjgiHsaHrZoDlQEWOGSDb1HniIFAUfkvpJpX14HLxQiqH7pLKCLsRoRi7bkgxRXGmcSwHV3R3hwNAuPJcXDhCCcsRWJqGmV6BaVCq6YaDNEdTCL+ltHDt6anhQCocxmHokThkBUsyDsOYZPrmeneFd3c4AIQrz7nCJUlSdNCgB6wwUVGIstNLxthykKqqqnOWcMP8IeqrcKweLkZxHFMcEhrHMcoeRxTfvuYQEK48ZYWbbxar2Xab7tdVrEndFemwL7legWFildVhGkZgnCNce7J03WLCeSEXTo1T4dTMsW2J7WsOAeHKU0K4+WJGUAr5+Z2RXV2RJRympoNS4SxZt4gTUGxZ2lkRrnWqB/cmwvF8XEhkfvk+Mnpeie1rDgHhylNMuPlmMUs1+/Hr5ObMB8LJadZXp0RR1cBhGTmFYDUwDYUQqqW3lBNufHd6d4dX4VyssJX4oUqiKIqzunDe/VlD1Oc9fs8ChDsZ2b7/aBQ8WONwb5HdLEPA/sxs7VL6JZ/0MvjCJrOkcENJPbl9jRfKsev5bB20u1QoVSI3lClV5KxvfjhviMp3Mf/fudyBcEdsW7Fm9EeZPecvPHnflvwCc1Y+r/flbWha6ssLgbOa1FLb1xySf07D3TTv3lILYP8hWt+3i4Oyyv2R6GaFEPr5o1nuIS8r3HB0coj6rs3cLX3I/rEy+3OVQeid2TP8txF+/USIbFeLzWaePJuXJGwwukXo5/dfJW27uHA3U7+Ubid1nBTfgLAUXbEHxxtlILSajV/ff7KhJ9k+w7YoJ99/NcrbxoXTNPu8f6c3lRYkx6uyLskrt31Ncdhan6/abJ6AF9AKzcavH9+//+QUGYseZyhNz0U6KVz37qECzV59OzsHd+qPyldrw/GFdSAM+mdzqtsjSPd+pTycOclwinTHCjjB7bPTnk7uK+X8IWoug91uFOecrAP8RQzaZemIYu79FxlKCj2x12Hnnt/AuOGr0RV79fekbkSx3xHbnWs8N3BdriIc2/ukJ3YboniZHiLw93IN4YR+u9HsiTfNbq8PbeoX4yrCNZvNlij2W83GJY5pBf5ihKs0qUJL4MK1WtCH+2pcRTg2SS2Kg3RXCuBL0b6ScE0m3LVfPFA/1xJuCMJ9SYRrCTcA4b4m1xOuB8J9Qa4W4fpibwjCfUGuKdy1XztQP1eLcDcg3NfkWsJ1Xw/ZBL4QV4twbbEDswxfDmEnXM29d2EofOsw4WDU8LUY9Pq8SR126q317ohdLtywAysFvxRdURx2xV6zU/OKvY7YG3bETrMndiDGfSGEQU/sdMRev+ZSb6Epijc9VvALkw1fCqHVFns9/lFrWRp/Xn6sawfK4b4UrebuLN8PrLI963kb6fP2an5e4MoIrT5/49s1Bxqh2eXP2wffvhitZucqgSYNcXV7DlydNMR1a3/jhWYbGtQvicBSIlcINEKzJ/ZhpuHzI5TeraR9N74p+K0l5z5zt1C5GfV+Vb2xygf2bDmk0P8JH362wb8wlzwuvyPTXeHvLLfV7/DEPlBS6U2kTuxtPTh/V6o3FNkwalDB80ijTx/lx1P7YpTcW7p995BDFMUPJTm1M+JA+l81L7TIMSgDSX78IJvNkzyVup87zo2nBQ8mPIP/lRLuxOb9L/u8FkY7dULwQNIKnzybR1BAuOFokqwrYP4kjT71bhd/j3DjvNNJvPLCnd4ZsUbhWuNpJb6x7Xtl6TPvkvfXCNea3le6E6d7+nSSGoVrTx8r8m29Xn9q4/4a4drS6dNJSnG6B1mfcN3pU3W+rddPfz6vcX+LcMPR/cnTSdLIFRZpWr0ip5PUJlxfkqv0jRn3aesC/xbhutLe5v2e5/t+Zp/NC2NaQEyv0OkkdQk3GE2q9W2dyJfZubsGrinc3kRVa6TuNaiejAihmSdjhjIqJNzD9HSrU5NwrYoGqPs8Tj/rSU9XFG7Yey0Yv5nuD1E9RfZ9ivnR5yELa/zS87wwTIULwzDk18Ij/T7/fno6utYk3LjKAcNLoyp90nTcFYVjG5PvKsYFSd1vQD1F9twYu66vEBy5rhrFhPquGypE4cLJBMdhGKsxOZJKKbR5fz3CtasdMDw3qtInDXHXE05o3bCSI14z3p0enk7CIpyiuD6V/Zj4roJpxE4/pySSCQpDSv0YRaGCsZx5bJPnqUWOX6pFuJuqBww75NHnDHEXF05oHWPY6LPius7gXQ7OkzEl1Pci7HshVkMFh2GEwiVa8iY1Qp4XKjSUkX+kSV0eO1/uoL6pDuEGF/Jtnfz5nBMOZYQr++5w4W56efA63k5bejgUR1GiGC+9GFFKsRwq1HWXyI0QO7cVhTFSKMVKKJMwUzcvvD8yRB309tcZ1iBcayRXPmB4DnHtT1kcWEI4q+zbw4VLjyzK5+5NDo714XwquzH2+YzWi3CemwoXspuZcNk9uOWxVPxet/Eywr11YDSZl41cRX/g6UKHNtYpnKFR/haw0zL1t0dmGio67ebBDzHhhH4379gavjJmLL09Xy4dNHgRGzH4L8L5JHY9yppWdrN/XLj76ZH+TdptfN55/1A4lSqy9npNOXxROj4u56tww97hOsbxdJNty2a2Wi1Y7Fst3tyzIgWFe/zzKSuVDoWjGAemaVPdMFSF37E78Zyddq6i4Pn8c3b5es/rpUbfCddqHqXRZWv/2o3Rve+9i3Cuj2JXxpRS36WpcKFKKJVRGLKblThUjgj3MG23WsOsf6/dxnfC6VRRZaI+vzDNSV8V+0Rtw9Rl6+DPYRwTTtxrtG/+HBugrrabxYos1uvNWyOLC3eqGObv5EA4C9vINk0Ha7auYMsyDUvl74nhaAYTztECHvtUOwgch//RHf7OWOlVFdv2myY1Z9DA18U0mjfSg/em779ceq4bLV0viqOl5y6XruuxPHAUR+llFC19dxllBzhVap3sNg7fC+cYhkwCQ1fZK9J107QMS9VN0yaqpbMwp1uGagcm+6vYtpUlXKvBfd6FnsFR39arGQtzZL7mRzhv5uwM51Q+LtycRT/e+TvewCaTTzlqOBDOoSZVDYudLSwjhBRDRgrBpmkRjImpIgUjHASsx45Uigk1TRtTSmxTw+yqbrOffCPccW5EsdNoNFvSvZ83bZ85dZpXq7S867ZOdhtZT+6tcKahkkAlFGPdlLFpUZlgZFkYIaIZyElfuGKYDlEIUQ+FEzitZuO10W5JxwcMXLj1drGerdYJmW1X68VstSXbVDiynaFFgpL1eoOOCyd/yuOKD4RTVNPBumlhMwhUHASGFgQBcQJKg0DTVeQEOtICGWmBg5zAIppB1SBQFFPjV23DxkFQVDih1e42mq1v/alzRpmId/wOR2q1ukfh3cYOX+D6VjjdxrJhm4FJNFPFpkWUIMCqERAtMEwmHNICm1jsL6ITfa8ncvfe58E3IW9GKxVuxYVb8K8XaLNekwUXbs5N2664kseF+5QlI/vC6dgOdMzilWUaMuvNBZaqYidAjmHyJtUMsBrIJDAtops61UykqCrFukYs1q02Nbz3PpwUrtlstYTWaFJpVZLrT7vHO46NNus2MtHfC0coVXT+komTCmebhkINk7BvY8KRwDSxxoVDe02qMX0fQbtCa1pQuDnry60XKL1516QuEHOOR7l/VjjDQZg1lq/CGSpRFOIYiP3Fs4TTkeo4jmaeIxxvhVjpzkOVdXBe6IyG3wQhv9vY5CfavBGO9dRMM33JqXCaacjKoXBstKoQhcjGvnBS43VtVY+vFG8KuTlfLlyy3TDh1vMV2hwIt92uVmi9Jps0+P2rTWpAFVuzZbwnHNKCgEU4NcgWziQOH7C9CmcWF44nrYTxJKzSN9eXxsefkXcbm83dfMO7Ptxz+gPnC0c02d7PEBnTUbPZSP+xLSl67TSC9k8MGuZkzoXjDSgXbrZiwi1Yq4rYUHa2yRHu0w8aLGQbhmEj28KqY6pEsw0iaypxApU4jqI/C6c8C4c1U6aOthfhbOJoxYVL3/RKA5zrqtOcOcZh96bRfJneyhSOypqKHD5o4MJRw8CKZu0JZ2JFVtS9UM4GDS12/Jww7KS67Z6j/eeYMKvtZsPTIqwPt5mvtusFWm0WZM6E26D5hkW4BG1zpinmnz0tYjgK//MrjqFS2dQV6piaQh2WDVUpdQyHBqYhOwHL0OmKbuqybeoqpbJt2rurJvvJUsKN3+bgDsJVmFJi+cxykhPgeLdRODLTsMv62oqiyrbpqKauWKbhqIahUcUyqc1fuCnbJnYcZ/91vqRFhAEbj7wqLRytTNrMZqsFS3ksNuvNarZI2KBhxQLaZrVmI9Y5C4GznBb1n0j8VkwB4QZ5Q1TPl1MKFZ+nOFLe2yAcHEeYPbWln3hVvEtxMBOxl4frN/Yi6LdvwrTwVOoiIwGyzWlR/4mprfqFG038HHuWikIRVVLhPPc1G3I05PmTEmViZ86l6kR2ZLzXdXgVjh0kfHDC5rBwsUiGcAnJs1Uut8z8b+G6wvUlJ3fIEIZL7Iah77mR54ZsZsHzXC9eHm1knTKFsOdO3luq6lh7P7kn3LsDXXMGDm/s2hS5ae/O04uE/kquKpwwnnonhgwR9l1XiTFh9ZaUROwWVpp05NtLbWdydrXIm5/KLcDsSpco+GUtKhRglhZuIJ2cZEiFQzGbsQ/DmLgeiUOXxJl9vtA5ufj58OnrKDG/yJKGdZKX/fmbuaZwQvvu5PAzFY6GXkiUKIrQMkZRFGE5yzfXL7KrzCv1CCdcYNEWW0TzKZMi1xVuKDknEx474Vw3RFSVZdmXEbvIjHCuUy41VdOqreGo+irz+eSTBrirCpe7fc074YjMFwqqvNw383v9+3LvQm0Loatf1yBLn3KIeuV1qVPnpG8vwnmhjH1/uWR1mb6/zEimeN7p7WveilDTVg+VDxw2sNXDGcKNpwW2r1my9agy77IpmFLZdWNW7htlCTcpmZmqbzOb9nRTgWYvPP35nAtovl1VuIGkFtm0gdX++j5P+S4j3gT7UZRZsVk2wNUonDCell1Mk+fb9PP6dkXh2pJ/OsB5u2kF73mSwdu745CwbICrdUPCCvezkT9rRoRzNeGGo3MKfXPQpLL1YXVuuTqYVjNwSDaTz7wdIRPOus6m0t2pX4Flr/intpDOkKCiTaWtIum/vvSUfJDHx82T/Gf8accLnPH07mLkzTMJBXJw5QJcke1rDhlIFb34Qtvm30wnH2U6ldrDz9t94wxLHEzRvRPv7rrFv/8mZ7ave/fgVcnpLaQzqOpckJtCQaeCJ/qc06dnw3dt6FTyUC3p7r5aygc44C9nkK5HquT/sta4aj5xpgDIROi8LiGu4NGq/u2u80cBLkdfFNui2BXFzz1KAj4JrZ7YaYhioyP2IJoAl2coig0mXB9CHFADQuum3xyIYrN5c/Mpl6cBnwy2pJMJxy6v/bsAXwC2IGkgisP3C5MA4CKkwkECAqiNQUVpXwAoggDCAbUCwgF1AhEOqBcQDqgTiHBAvYBwQJ2wCNe89i8BfCFAOKBOIMIB9QLCAXUCEQ6oFxAOqBOIcEC9gHBAnUCEA+oFhAPqBCIcUC8gHFAnEOGAegHhgDqBCAfUCwgH1AlEOKBeQDigTiDC/b20PkD2IwofeMQSuzPkPg7bqquilwNUynD652xG2W9Rdyqdy7T4OfDDs5/k2HNPYS+SGhhIT/PH+fzxjH/HjpZuS+ee4GGVOCpnfPeQQxTH0UM57j7zMT2fh4F09ulxx4U794yioLhw7MC148d1eL7v+6cOqT+k9IFrwFl8VuHGeecReeyA3HK+uaUPXANK0xoOhn3p6fEMkisLN5ScnACXqlbCNy90JDiu4+K0p6MR6yyfw5WFq/jANc8rf+AaUBZhPHl6enralP73tJH/lBdOty3dNHXLtvgVW/+AcK2MA9cOTyndeVTUuDMOXAPKIozPPhjzqbRwuowxxpquYIwd08YYU+t84dp3y/dBKlxGEbt4ls4LY7nASc6Msw5cA0pSq3Ay1kzd0RxsGbZlKoppZoS4osK1JDWjG6ZiipXQjV8a21AhBYWDIWottOsTziIOv1QxD3dU/lAfrj19eD8kWKLI8yPXQ1G4a1pD+Vm4/KbVc++hB3dhBjy5ft4Ew+YM4Wxi7y4pi2wOUq3zhRuO7jOGqDFioc2PkRz78dL1vNhnwvmxrC5P+LaEIeql6fLxwllMn84QTiOpYIZNCeu8OZioZzepXWmZEbN8TKPQXSqIyj6mobskTLhQwbFMovwW9X4E86gXpisnZ7amiXyOcM8RjrmHqWEaurNrZMsL1xrdZ7aRS4qo77qsSY2IHyqUNakRcsOQKjl9Oc99kLrXfj/+eaoWbrDnXnYfTnv+0nCQwS4VWlS4/mGPvi8tj5gTYcL6cK7n4jgkMRNORpRSQnMHD/cwbX9xKhauJYqdlytZwukKtk1d02ybDVgNzcocOGQLN9x/8G/fBEnNyq95bKDqo9hFrP2UlZiETDgVLaNomZslfpjeXPvt+PepWjh2BvOzFZlpEYsSloFzMMVYMxVMi+fh0gd/6WXdTB8yvYm8MFyiiDepboSxHKZNqh+GYc4w1fNUCQLcxalauOZNTxTFtCuUPdOgW5ptsc+axSYatOIzDUKz3xPF3i4MCdP7THvCGCkKUsIQY3np+hT5PA8XykSWaZwT4JYSBLjLU5FwrSFnMOj3uXHiQPjgXKrQf8fNTbfLHrzH/e5KD1nxyvPCSFFY982TZd91Fcr6dHHoufzm4wEuVGGIWgOVCPdHfE9H+JhwQzGHG+FbazTJHgB4nsubzvTCxzHr1vF0XRgez/yyHBwMUWugWuF6HO7b4KPCdXoZdF4evJ8d4N516Oiy0MS9F95P4UCHGigg3GxzSrhRY48uD0GN5geFE5qNDNrpg7cEYXRfrAKkWKGI5z5MobK8Dt4Jt0Jom6yT+estaHFauOYzAz6SbDSbH+3DsQPE38LGDGKbP/hAeigoXKHvcl11Cj24Ongr3GK7Xm+S9WZbSjh+yjejxXTrN5p8md/HhBPewvJwYqff5A8+uq+08NJdToqvEwM+wFvhVjP2eb4lq8V8xbRacOGS1XaVJxxLU7CTvlu93s1OtzfCGUFglBLuPcPei8v9qVOlbp7nSBDgauGtcBsez5IZWWwSNOcCosU6IYtkts0XjtNqNprPvh0KpyqKo39IOIE9eEvgDz6aHB9uvmlJC3TiPNcvsRAW+Ajv+nAbQhbrtEmdrdZrNGfC8biH5qeFE1rN10Xz+8IZhCqYz6O+j3NGMeH4Sv70wfs5S2f8OI6j15VaoYpPFl+ypTMwRK2HjFHqgixS4eZovSG8D7fdrlYrsjkt3Ddhb3boIMJhJzCowqpDbMM0dVPXTEPjAuqOFexuOSHc84ML48lxe2JCKaavwsnolHAswMEQtSay0iILtBs0bDezRSrcKkmSN99YsjwJO6apUlMmlCiGocgYWZRSyiriXm7R84V7YZCTg/Mi7HsRm7gPPdcLuXAsBxymGeGs2VQvVKGyvC7eCpfwELcTbrEl6Sg1HUp8VDgLq6ZjBjrRAoo0Q8O6oZvsmkkcfotZULjxxD/eMYux7/okCmMldEMc8wjnKwSrrFCO4KzB7XICAa4u3o9SF6vtZj0nq816naBZKlyyXS0Wq48JR2VKdTOwNA07AaWBaWPVMgwVaY6DVX5LQeGGkpMzEIhxHMnYc2McuiGSmXAhVrwliUMs762s2cOBSYbaeBfhNosFGxzMF0y4Leu2bRJ+82b+MeEUR2OLGLCikFQ4U6NYDRSkqqqslRFuPMnLwUWEYrJ094WLkee7Cg4x9TKaVM+HAFcfuVNbyXaec2f5PpxpmsQxdR7hePtpE1sl/JuM4sIN8nNwMfZ9LL8RjmKMldCnSM7ow8EQtUZyhdus1lULhxxLI6lwlmbZ2NaJY1m2XkK4cf7uDhH23Zh4h8KFDM8NlyRjSTRsX1Mj+RFuXZlwBuVJD0OlVFY0Q5YNU6OUqqbhUEoVm99SSLhB/vY1u0FDHLKRapwK5xM1DJdLL3LfL6NhOTgYotZHbau2rF3Ow7JNXWcf7EteXK5bfK+R/WmIHOGE9l3+1AETLi3xRUTGXDi2qIbgOKSE4PdbQ9zB4ucaqXuZYP4MQwHhhlKxWVS2LdyzmZ7r+rwZZp/f6urA9jV1ck3hzHOEa+fl4A6VeyeXl1Gu5E9g+5o6eS9cUQGvI1zW/lwfwPMeptCDq5N94TarRbJeo4JbrxYSzjiP48KN75YVeLYn3D0MUWtlT7gFWa22x4RLFkmmcNL88fGocB/YNv+IcEPpvuDGWwVbXdifq2b2hNuZhjbP9eXPFwkvyUwvkjfCsdMdRuPs4sVB+3yOdOTbUz+slMkYCi9rZV+4tJQcrWbbWbJeb2YzNrOVzGaz1TpBiGzZ19vNmwg3YOtR6/pth6PpfbXA4uea2RNug/jEApol6+2CT2vNt8l6tVgnswWLcOv1arV+LVLaCVfrbzuYStX+kyAHVzMHg4YtC3KsZV2t1ottkjDLyCZJFrN1sk1YKUnyrg937RcAfC4O0yIbsuHCLVbrFVksVrN5glhh0iIVji2l2Ytw8uOjDMIBpXiTh9suXoTbrZlBc56Z48Ix5Vavwk0n0+n02i8A+Fy8CpewEcJrhJuT5FnB9XOlUrJeL2avwo37gyGM8YBS7Am33c6YXWS+Xi8WrL58Nlsl6/l2tmKbPay2s/VqtnqtkEtk2PwFKM1+kzrfJLvsGx+LzudcrmSeJt/YtfleHm4NwgHlOWvyPkkeHzdPExAOKE054ZJk8yRP/vz5w2afIGcKlKewcMnj5kme/hmNxu3uTb8/GAwGkDMFSlNQuMcneSKN2mxYCpoBH6CIcMnTZDod9SEDAnyck8Ilj/Kf0egGbAMq4YRwj0/yn3EXSsaAqsgVjnXc2gMIbkB1dCdPR4x7lCVp1IUhAlApg9Hoz1R+enx83Y4rSZJHngEZ90E3oGpaw0F3PPoznciMJ/lJluWJJI270JQCl0IQWsN+tz0ej0Y8sdsfChDbgEvwf5cxgKt0TbIfAAAAAElFTkSuQmCC" alt="avatar"></p>
+<ul>
+<li>浏览器使用流式布局模型 (Flow Based Layout)</li>
+<li>浏览器会把HTML解析成DOM，把CSS解析成CSSOM，DOM和CSSOM合并就产生了Render Tree</li>
+<li>有了RenderTree就能知道所有节点的样式，计算节点在页面上的大小和位置，把节点绘制到页面上</li>
+<li>由于浏览器使用流式布局，对Render Tree的计算通常只需要遍历一次就可以完成，但table及其内部元素除外，通常需要多次计算且要花费3倍于同等元素的时间，这也是为什么要避免使用table布局的原因之一<br>浏览器渲染过程如下：</li>
+<li>解析HTML，生成DOM树</li>
+<li>解析CSS，生成CSSOM树</li>
+<li>将DOM树和CSSOM树结合，生成渲染树(Render Tree)</li>
+<li>Layout(回流)：根据生成的渲染树，进行回流(Layout)，得到节点的几何信息（位置，大小）</li>
+<li>Painting(重绘)：根据渲染树以及回流得到的几何信息，得到节点的绝对像素</li>
+<li>Display：将像素发送给GPU，展示在页面上。（这一步其实还有很多内容，比如会在GPU将多个合成层合并为同一个层，并展示在页面中。而css3硬件加速的原理则是新建合成层，这里我们不展开，之后有机会会写一篇博客）<h3 id="何时触发回流和重绘"><a href="#何时触发回流和重绘" class="headerlink" title="何时触发回流和重绘"></a>何时触发回流和重绘</h3>何时发生回流：</li>
+<li>添加或删除可见的DOM元素</li>
+<li>元素的位置发生变化</li>
+<li>元素的尺寸发生变化（包括外边距、内边框、边框大小、高度和宽度等）</li>
+<li>内容发生变化，比如文本变化或图片被另一个不同尺寸的图片所替代。</li>
+<li>页面一开始渲染的时候（这肯定避免不了）</li>
+<li>浏览器的窗口尺寸变化（因为回流是根据视口的大小来计算元素的位置和大小的）<br>何时发生重绘（回流一定会触发重绘）：<br>当页面中元素样式的改变并不影响它在文档流中的位置时（例如：color、background-color、visibility等），浏览器会将新样式赋予给元素并重新绘制它，这个过程称为重绘。<br>有时即使仅仅回流一个单一的元素，它的父元素以及任何跟随它的元素也会产生回流。现代浏览器会对频繁的回流或重绘操作进行优化，浏览器会维护一个队列，把所有引起回流和重绘的操作放入队列中，如果队列中的任务数量或者时间间隔达到一个阈值的，浏览器就会将队列清空，进行一次批处理，这样可以把多次回流和重绘变成一次。你访问以下属性或方法时，浏览器会立刻清空队列：</li>
+<li>clientWidth、clientHeight、clientTop、clientLeft</li>
+<li>offsetWidth、offsetHeight、offsetTop、offsetLeft</li>
+<li>scrollWidth、scrollHeight、scrollTop、scrollLeft</li>
+<li>width、height</li>
+<li>getComputedStyle()</li>
+<li>getBoundingClientRect()<br>以上属性和方法都需要返回最新的布局信息，因此浏览器不得不清空队列，触发回流重绘来返回正确的值。因此，我们在修改样式的时候，<strong>最好避免使用上面列出的属性，他们都会刷新渲染队列。</strong>如果要使用它们，最好将值缓存起来。<h3 id="如何避免触发回流和重绘"><a href="#如何避免触发回流和重绘" class="headerlink" title="如何避免触发回流和重绘"></a>如何避免触发回流和重绘</h3>CSS：</li>
+<li>避免使用table布局。</li>
+<li>尽可能在DOM树的最末端改变class。</li>
+<li>避免设置多层内联样式。</li>
+<li>将动画效果应用到position属性为absolute或fixed的元素上</li>
+<li>避免使用CSS表达式（例如：calc()）</li>
+<li>CSS3硬件加速（GPU加速）<br>JavaScript：</li>
+<li>避免频繁操作样式，最好一次性重写style属性，或者将样式列表定义为class并一次性更改class属性</li>
+<li>避免频繁操作DOM，创建一个documentFragment，在它上面应用所有DOM操作，最后再把它添加到文档中</li>
+<li>也可以先为元素设置display: none，操作结束后再把它显示出来。因为在display属性为none的元素上进行的DOM操作不会引发回流和重绘</li>
+<li>避免频繁读取会引发回流/重绘的属性，如果确实需要多次使用，就用一个变量缓存起来</li>
+<li>对具有复杂动画的元素使用绝对定位，使它脱离文档流，否则会引起父元素及后续元素频繁回流</li>
+</ul>
+
+  </article>
+  <aside class="table-content" id="site-toc">
+  <div class="table-content-title">
+    <i class="fa fa-arrow-right fa-lg" id="site-toc-hide-btn"></i>
+    <span>目录</span>
+  </div>
+  <div class="table-content-main">
+    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#浏览器渲染过程"><span class="toc-text">浏览器渲染过程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#何时触发回流和重绘"><span class="toc-text">何时触发回流和重绘</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#如何避免触发回流和重绘"><span class="toc-text">如何避免触发回流和重绘</span></a></li></ol>
+  </div>
+</aside>
+  
+    <aside class="passage-copyright">
+      <div>本文作者: Cloudy</div>
+      
+        <div>
+          原文链接: 
+          <a href="" target="_blank">http://yoursite.com/2019/11/29/%E5%A6%82%E4%BD%95%E9%81%BF%E5%85%8D%E5%9B%9E%E6%B5%81%E5%92%8C%E9%87%8D%E7%BB%98/</a>
+        </div>
+      
+      <div>
+        版权声明: 本博客所有文章除特别声明外, 均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener">CC BY-NC-SA 4.0</a> 许可协议. 转载请注明出处!
+      </div>
+    </aside>
+  
+  
+    <div class="passage-tags">
+     
+      <a href="/tags/CSS/"><i class="fa fa-tags"></i>CSS</a>
+     
+      <a href="/tags/%E4%BC%98%E5%8C%96/"><i class="fa fa-tags"></i>优化</a>
+     
+      <a href="/tags/%E6%B5%8F%E8%A7%88%E5%99%A8/"><i class="fa fa-tags"></i>浏览器</a>
+     
+      <a href="/tags/DOM/"><i class="fa fa-tags"></i>DOM</a>
+     
+      <a href="/tags/%E6%B8%B2%E6%9F%93/"><i class="fa fa-tags"></i>渲染</a>
+    
+    </div>
+  
+</div>
+
+    </main>
+    
+      
+<div class="site-comment-contanier" data-plateform="leancloud">
+  
+    <p id="site-comment-info">
+      <i class="fa fa-spinner fa-spin"></i> 评论加载中
+    </p>
+    <div id="site-comment"></div>
+  
+</div>
+    
+    <div class="site-footer-wrapper">
+  <footer class="site-footer">
+    
+      
+        <div class="site-footer-col">
+          <h5 class="site-footer-title">博客推荐</h5>
+          
+            <span class="site-footer-item">
+              <a href="https://github.com/Cloudyttt/Cloudyttt.github.io" target="_blank">Cloudyttt</a>
+            </span>
+          
+            <span class="site-footer-item">
+              <a href="https://github.com/Cloudyttt/Cloudyttt.github.io" target="_blank">Cloudy</a>
+            </span>
+          
+        </div>
+      
+        <div class="site-footer-col">
+          <h5 class="site-footer-title">系列教程</h5>
+          
+            <span class="site-footer-item">
+              <a href="https://cn.vuejs.org/" target="_blank">Vue</a>
+            </span>
+          
+            <span class="site-footer-item">
+              <a href="http://nodejs.cn/" target="_blank">Nodejs</a>
+            </span>
+          
+        </div>
+      
+        <div class="site-footer-col">
+          <h5 class="site-footer-title">抓到我</h5>
+          
+            <span class="site-footer-item">
+              <a href="https://juejin.im/user/5acdb1af5188257cc20da3f4" target="_blank">掘金</a>
+            </span>
+          
+            <span class="site-footer-item">
+              <a href="https://segmentfault.com/u/cloudyttt" target="_blank">思否</a>
+            </span>
+          
+        </div>
+      
+    
+    <div class="site-footer-info">
+      <i class="fa fa-clock-o"></i> 本站已稳定运行<span id="site-time"></span>
+    </div>
+    
+      <div class="site-footer-info">
+        <i class="fa fa-paw"></i> 您是本站第 <span id="site-count"></span> 位访客
+      </div>
+    
+    
+      <div class="site-footer-info">
+        <i class="fa fa-at"></i> Email: cloudyhaotian@qq.com
+      </div>
+    
+    <!--<div class="site-footer-info">
+      <i class="fa fa-copyright"></i>
+      2019 <a href="https://github.com/dongyuanxin/theme-ad/" target="_blank">Theme-AD</a>.
+      Created by <a href="https://godbmw.com/" target="_blank">GodBMW</a>.
+      All rights reserved.
+    </div>-->
+  </footer>
+</div>
+
+    <div id="site-layer" style="display:none;">
+  <div class="site-layer-content">
+    <div class="site-layer-header">
+      <span class="site-layer-header-title" id="site-layer-title"></span>
+      <i class="fa fa-close" id="site-layer-close"></i>
+    </div>
+    <div class="site-layer-body" id="site-layer-container">
+      <div class="site-layer-input" id="site-layer-search" style="display: none;">
+        <div class="site-layer-input-choose">
+          <a href="javascript:void(0);" target="_blank" rel="noopener" title="Change Search Engine">Google</a>
+        </div>
+        <input type="text">
+        <i class="fa fa-search"></i>
+      </div>
+      
+        <div class="site-layer-reward" id="site-layer-reward" style="display: none;">
+          
+            <div>
+              <img src="/images/wechat.jpeg" alt="WeChat">
+              
+                <p>WeChat</p>
+              
+            </div>
+          
+            <div>
+              <img src="/images/alipay.jpeg" alt="AliPay">
+              
+                <p>AliPay</p>
+              
+            </div>
+          
+        </div>
+      
+      <div id="site-layer-welcome" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+    
+
+<div class="bottom-bar">
+  <div class="bottom-bar-left">
+    <a href="/2019/12/02/%E4%B8%AD%E5%9B%BD%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E6%94%B9%E9%9D%A9%E5%BC%80%E6%94%BE%EF%BC%9F/" data-enable="true">
+      <i class="fa fa-arrow-left"></i>
+    </a>
+    <a href="/2019/11/29/JSONP%E8%B7%A8%E5%9F%9F/" data-enable="true">
+      <i class="fa fa-arrow-right"></i>
+    </a>
+  </div>
+  <div class="bottom-bar-right">
+    <a href="javascript:void(0);" target="_blank" rel="noopener" data-enable="true" id="site-toc-show-btn">
+      <i class="fa fa-bars"></i>
+    </a>
+    
+      <a href="#site-comment" data-enable="true">
+        <i class="fa fa-commenting"></i>
+      </a>
+    
+    <a href="javascript:void(0);" target="_blank" rel="noopener" id="site-toggle-share-btn">
+      <i class="fa fa-share-alt"></i>
+    </a>
+    
+      <a href="javascript:void(0);" target="_blank" rel="noopener" id="site-reward">
+        <i class="fa fa-thumbs-up"></i>
+      </a>
+    
+    <a href="javascript:void(0);" target="_blank" rel="noopener" id="back-top-btn">
+      <i class="fa fa-chevron-up"></i>
+    </a>
+  </div>
+</div>
+    <div id="share-btn">
+  
+    <a id="share-btn-twitter" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-twitter"></i>
+    </a>
+  
+  
+    <a id="share-btn-facebook" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-facebook"></i>
+    </a>
+  
+  
+    <a id="share-btn-weibo" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-weibo"></i>
+    </a>
+  
+  
+    <a id="share-btn-qq" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-qq"></i>
+    </a>
+  
+  
+    <a id="share-btn-wechat" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-wechat"></i>
+    </a>
+  
+</div>
+    
+  <script async src="https://www.googletagmanager.com/gtag/js?id="></script>
+  <script async>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', '');
+  </script>
+
+
+
+  <script async>
+  (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      if (curProtocol === 'https') {
+          bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+      }
+      else {
+          bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+      }
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+  })();
+  </script>
+
+
+
+
+    
+  </body>
+</html>
