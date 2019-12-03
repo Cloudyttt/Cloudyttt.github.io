@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html>
+  
+<head>
+  <meta charset="utf-8">
+  <meta name="author" content="Cloudy" />
+  
+
+  <title>AJAX原理 | Cloudy&#39;s Blog</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="跨域,JavaScript,Ajax,HTTP," />
+  
+
+  
+  <meta name="description" content="Cloudy&#39;s Blog">
+
+  
+
+  
+    <script src="//cdn.jsdelivr.net/npm/leancloud-storage@3.11.1/dist/av-min.js" async></script>
+  
+
+  
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+  
+
+  
+    <script src="//unpkg.com/valine/dist/Valine.min.js" async></script>
+  
+
+  
+
+  <script>
+  // theme-ad's config script
+  // it can be used in every script
+  
+  window.AD_CONFIG = {
+    leancloud: {"appid":"","appkey":"","comment":true,"count":true},
+    welcome: {"enable":false,"interval":30},
+    start_time: "2019-11-09",
+    passwords: ["efe07af7441da2b69c4a41e42e73be4db47f66010a56900788a458354a7373ec", ],
+    is_post: true,
+    lock: false,
+    author: "Cloudy",
+    share: {"twitter":true,"facebook":true,"weibo":true,"qq":true,"wechat":true},
+    mathjax: true,
+    page_type: "",
+    root: "/"
+  };
+</script>
+
+  <script src="/vendor/sha256.min.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/index.js"></script>
+<script src="/vendor/qrcode.min.js"></script>
+
+  
+    <link rel="icon" href="/images/favicon.ico">
+    <link rel="apple-touch-icon" href="/images/touch-icon.png">
+  
+
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/index.css">
+<link rel="stylesheet" href="/styles/components/highlight/highlight.css">
+
+  
+</head>
+
+  <body>
+    <header class="site-header">
+  <div class="site-header-brand">
+    
+      <span class="site-header-brand-title">
+        <a href="/">首页</a>
+      </span>
+    
+    
+      <span class="site-header-brand-motto"> | 学无止境</span>
+    
+  </div>
+  <div class="site-header-right">
+    <nav class="site-header-navigation">
+      
+        <a href="/" target="_self">首页</a>
+      
+        <a href="/archives/" target="_self">归档</a>
+      
+        <a href="/tags/" target="_self">标签</a>
+      
+        <a href="/categories/" target="_self">分类</a>
+      
+        <a href="/friends/" target="_self">友链</a>
+      
+        <a href="/about/" target="_self">关于</a>
+      
+    </nav>
+    <div class="site-header-btn">
+      
+        <a href="https://github.com/Cloudyttt/" target="_blank" id="site-github">
+          <i class="fa fa-github-alt"></i>
+        </a>
+      
+      <a href="javascript:void(0);" target="_blank" rel="noopener" id="site-search">
+        <i class="fa fa-search"></i>
+      </a>
+      <a href="javascript:void(0);" target="_blank" rel="noopener" id="site-nav-btn">
+        <i class="fa fa-ellipsis-v"></i>
+      </a>
+    </div>
+  </div>
+</header>
+<nav class="table-content" id="site-nav">
+  <div class="table-content-title">
+    <span>导航</span>
+  </div>
+  <div class="table-content-main">
+    <ol class="toc">
+      
+        <li class="toc-item">
+          <a href="/" target="_self">
+            首页
+          </a>
+        </li>
+      
+        <li class="toc-item">
+          <a href="/archives/" target="_self">
+            归档
+          </a>
+        </li>
+      
+        <li class="toc-item">
+          <a href="/tags/" target="_self">
+            标签
+          </a>
+        </li>
+      
+        <li class="toc-item">
+          <a href="/categories/" target="_self">
+            分类
+          </a>
+        </li>
+      
+        <li class="toc-item">
+          <a href="/friends/" target="_self">
+            友链
+          </a>
+        </li>
+      
+        <li class="toc-item">
+          <a href="/about/" target="_self">
+            关于
+          </a>
+        </li>
+      
+    </ol>
+  </div>
+</nav>
+<div id="site-process"></div>
+    <main>
+      
+  <div class="passage">
+  <div class="passage-meta">
+    <span>
+      <i class="fa fa-calendar"></i>2019-12-03
+    </span>
+    
+    
+      <span>
+        | <i class="fa fa-unlock-alt"></i>UNLOCK
+      </span>
+    
+  </div>
+  <h1 class="passage-title">
+    AJAX原理
+  </h1>
+  
+  <article class="passage-article">
+    <h2 id="引语"><a href="#引语" class="headerlink" title="引语"></a>引语</h2><p><code>AJAX</code>即“<code>Asynchronous Javascript And XML</code>”（异步JavaScript和XML），是指一种创建交互式网页应用的网页开发技术。</p>
+<p><code>AJAX</code> 是一种用于创建快速动态网页的技术。它可以令开发者只向服务器获取数据（而不是图片，HTML文档等资源），互联网资源的传输变得前所未有的轻量级和纯粹，这激发了广大开发者的创造力，使各式各样功能强大的网络站点，和互联网应用如雨后春笋一般冒出，不断带给人惊喜。<br><img src="https://image-static.segmentfault.com/372/649/3726497697-5de5e2bdf0aef_articlex" alt="avatar"></p>
+<h2 id="一、什么是AJAX"><a href="#一、什么是AJAX" class="headerlink" title="一、什么是AJAX"></a>一、什么是AJAX</h2><p><code>Ajax</code>是一种异步请求数据的web开发技术，对于改善用户的体验和页面性能很有帮助。简单地说，在不需要重新刷新页面的情况下，Ajax 通过异步请求加载后台数据，并在网页上呈现出来。常见运用场景有表单验证是否登入成功、百度搜索下拉框提示和快递单号查询等等。</p>
+<p><strong>Ajax的目的是提高用户体验，较少网络数据的传输量</strong>。同时，由于AJAX请求获取的是数据而不是HTML文档，因此它也节省了网络带宽，让互联网用户的网络冲浪体验变得更加顺畅。</p>
+<h2 id="二、AJAX原理是什么"><a href="#二、AJAX原理是什么" class="headerlink" title="二、AJAX原理是什么"></a>二、AJAX原理是什么</h2><p>Ajax相当于在用户和服务器之间加了一个中间层,使用户操作与服务器响应异步化。并不是所有的用户请求都提交给服务器，像一些数据验证和数据处理等都交给Ajax引擎自己来做，只有确定需要从服务器读取新数据时再由Ajax引擎代为向服务器提交请求。</p>
+<p>Ajax的原理简单来说通过XmlHttpRequest对象来向服务器发送异步请求，从服务器获得数据，然后用JavaScript来操作DOM而更新页面。这其中最关键的一步就是从服务器获得请求数据。要清楚这个过程和原理，我们必须对 XMLHttpRequest有所了解。</p>
+<p>XMLHttpRequest是ajax的核心机制，它是在IE5中首先引入的，是一种支持异步请求的技术。简单的说，也就是JavaScript可以及时向服务器提出请求和处理响应，而不阻塞用户。达到无刷新的效果。</p>
+<h2 id="三、AJAX的使用"><a href="#三、AJAX的使用" class="headerlink" title="三、AJAX的使用"></a>三、AJAX的使用</h2><h3 id="1-创建Ajax核心对象XMLHttpRequest-记得考虑兼容性"><a href="#1-创建Ajax核心对象XMLHttpRequest-记得考虑兼容性" class="headerlink" title="1.创建Ajax核心对象XMLHttpRequest(记得考虑兼容性)"></a>1.创建Ajax核心对象<code>XMLHttpRequest</code>(记得考虑兼容性)</h3><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> xhr = <span class="literal">null</span>;</span><br><span class="line"><span class="keyword">if</span> (<span class="built_in">window</span>.<span class="string">`XMLHttpRequest`</span>) &#123;<span class="comment">// 兼容 IE7+, Firefox, Chrome, Opera, Safari  </span></span><br><span class="line">	xhr = <span class="keyword">new</span> <span class="string">`XMLHttpRequest`</span>();  </span><br><span class="line">&#125; <span class="keyword">else</span> &#123;<span class="comment">// 兼容 IE6, IE5 </span></span><br><span class="line">	xhr = <span class="keyword">new</span> ActiveXObject(<span class="string">"Microsoft.XMLHTTP"</span>);  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-向服务器发送请求"><a href="#2-向服务器发送请求" class="headerlink" title="2.向服务器发送请求"></a>2.向服务器发送请求</h3><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">xhr.open(method, url, <span class="keyword">async</span>);  </span><br><span class="line">send(string);<span class="comment">//`POST`请求时才使用字符串参数，否则不用带参数。</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>method</code>：请求的类型；<code>GET</code> 或 <code>POST</code></li>
+<li><code>url</code>：文件在服务器上的位置</li>
+<li><code>async</code>：true（异步）或 false（同步）</li>
+<li><em>注意：<code>POST</code>请求一定要设置请求头的格式内容*</em></li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">xhr.open(<span class="string">"`POST`"</span>, <span class="string">"test.html"</span>, <span class="literal">true</span>);  </span><br><span class="line">xhr.setRequestHeader(<span class="string">"Content-type"</span>, <span class="string">"application/x-www-form-urlencoded"</span>);  </span><br><span class="line">xhr.send(<span class="string">"fname=Henry&amp;lname=Ford"</span>);  <span class="comment">//`POST`请求参数放在send里面，即请求体</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>一个Promise对象实现的 Ajax 操作的例子：</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> getJSON = <span class="function"><span class="keyword">function</span>(<span class="params">url</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> promise = <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function"><span class="keyword">function</span>(<span class="params">resolve, reject</span>)</span>&#123;</span><br><span class="line">    <span class="keyword">const</span> handler = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="keyword">if</span> (<span class="keyword">this</span>.readyState !== <span class="number">4</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (<span class="keyword">this</span>.status === <span class="number">200</span>) &#123;</span><br><span class="line">        resolve(<span class="keyword">this</span>.response);</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        reject(<span class="keyword">new</span> <span class="built_in">Error</span>(<span class="keyword">this</span>.statusText));</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="keyword">const</span> client = <span class="keyword">new</span> XMLHttpRequest();</span><br><span class="line">    client.open(<span class="string">"GET"</span>, url);</span><br><span class="line">    client.onreadystatechange = handler;</span><br><span class="line">    client.responseType = <span class="string">"json"</span>;</span><br><span class="line">    client.setRequestHeader(<span class="string">"Accept"</span>, <span class="string">"application/json"</span>);</span><br><span class="line">    client.send();</span><br><span class="line">  &#125;);</span><br><span class="line">  <span class="keyword">return</span> promise;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">getJSON(<span class="string">"/posts.json"</span>).then(<span class="function"><span class="keyword">function</span>(<span class="params">json</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'Contents: '</span> + json);</span><br><span class="line">&#125;, <span class="function"><span class="keyword">function</span>(<span class="params">error</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.error(<span class="string">'出错了'</span>, error);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-服务器响应处理（区分同步跟异步两种情况）"><a href="#3-服务器响应处理（区分同步跟异步两种情况）" class="headerlink" title="3.服务器响应处理（区分同步跟异步两种情况）"></a>3.服务器响应处理（区分同步跟异步两种情况）</h3><p>responseText 获得字符串形式的响应数据。<br>responseXML 获得XML 形式的响应数据。</p>
+<p><strong>同步处理</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">xhr.open(<span class="string">"`GET`"</span>,<span class="string">"info.txt"</span>,<span class="literal">false</span>);  </span><br><span class="line">xhr.send();  </span><br><span class="line"><span class="built_in">document</span>.<span class="string">`GET`</span>ElementById(<span class="string">"myDiv"</span>).innerHTML = xhr.responseText; <span class="comment">//获取数据直接显示在页面上</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>异步处理（推荐）</strong><br>相对来说比较复杂，要在请求状态改变事件中处理。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">xhr.onreadystatechange = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123; </span><br><span class="line">	<span class="keyword">if</span> (xhr.readyState == <span class="number">4</span> &amp;&amp; xhr.status == <span class="number">200</span>)&#123;    </span><br><span class="line">	<span class="built_in">document</span>.<span class="string">`GET`</span>ElementById(<span class="string">"myDiv"</span>).innerHTML = xhr.responseText;  </span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>什么是<code>readyState</code>？</strong><br><code>readyState</code>是<code>XMLHttpRequest</code>对象的一个属性，用来标识当前<code>XMLHttpRequest</code>对象处于什么状态。<br>readyState总共有5个状态值，分别为0~4，每个值代表了不同的含义：</p>
+<ul>
+<li><code>0</code>：未初始化 — 尚未调用.open()方法；</li>
+<li><code>1</code>：启动 — 已经调用.open()方法，但尚未调用.send()方法；</li>
+<li><code>2</code>：发送 — 已经调用.send()方法，但尚未接收到响应；</li>
+<li><code>3</code>：接收 — 已经接收到部分响应数据；</li>
+<li><code>4</code>：完成 — 已经接收到全部响应数据，而且已经可以在客户端使用了；</li>
+</ul>
+<p><strong>什么是status？</strong><br>HTTP状态码(status)由三个十进制数字组成，第一个十进制数字定义了状态码的类型，后两个数字没有分类的作用。HTTP状态码共分为5种类型：</p>
+<ul>
+<li><strong>1xx（临时响应）</strong>：表示临时响应并需要请求者继续执行操作的状态码。</li>
+<li><strong>2xx（成功）</strong>：表示成功处理了请求的状态码。</li>
+<li><strong>3xx（重定向）</strong>：表示要完成请求，需要进一步操作。通常，这些状态代码用来重定向。</li>
+<li><strong>4xx（请求错误）</strong>：这些状态码表示请求可能出错，妨碍了服务器的处理。</li>
+<li><strong>5xx（服务器错误）</strong>：这些状态码表示服务器在尝试处理请求时发生内部错误。这些错误可能是服务器本身的错误，而不是请求出错。</li>
+</ul>
+<p><strong>常见的状态码</strong><br>仅记录在 RFC2616 上的 HTTP 状态码就达 40 种，若再加上 WebDAV（RFC4918、5842）和附加 HTTP 状态码 （RFC6585）等扩展，数量就达 60 余种。接下来，我们就介绍一下这些具有代表性的一些状态码。</p>
+<ul>
+<li><code>200</code> 表示从客户端发来的请求在服务器端被正常处理了。</li>
+<li><code>204</code> 表示请求处理成功，但没有资源返回。</li>
+<li><code>301</code> 表示永久性重定向。该状态码表示请求的资源已被分配了新的URI，以后应使用资源现在所指的URI。</li>
+<li><code>302</code> 表示临时性重定向。</li>
+<li><code>304</code> 表示客户端发送附带条件的请求时（指采用<code>GET</code>方法的请求报文中包含if-matched,if-modified-since,if-none-match,if-range,if-unmodified-since任一个首部）服务器端允许请求访问资源，但因发生请求未满足条件的情况后，直接返回304Modified（服务器端资源未改变，可直接使用客户端未过期的缓存）</li>
+<li><code>400</code> 表示请求报文中存在语法错误。当错误发生时，需修改请求的内容后再次发送请求。</li>
+<li><code>401</code> 表示未授权（Unauthorized)，当前请求需要用户验证</li>
+<li><code>403</code> 表示对请求资源的访问被服务器拒绝了</li>
+<li><code>404</code> 表示服务器上无法找到请求的资源。除此之外，也可以在服务器端拒绝请求且不想说明理由时使用。</li>
+<li><code>500</code> 表示服务器端在执行请求时发生了错误。也有可能是Web应用存在的bug或某些临时的故障。</li>
+<li><code>503</code> 表示服务器暂时处于超负载或正在进行停机维护，现在无法处理请求。</li>
+</ul>
+<h3 id="4-GET和POST请求数据区别"><a href="#4-GET和POST请求数据区别" class="headerlink" title="4.GET和POST请求数据区别"></a>4.<code>GET</code>和<code>POST</code>请求数据区别</h3><ol>
+<li><code>GET</code>在浏览器回退时是无害的，而<code>POST</code>会再次提交请求。</li>
+<li><code>GET</code>产生的URL地址可以被Bookmark，而<code>POST</code>不可以。</li>
+<li><code>GET</code>请求会被浏览器主动cache，而<code>POST</code>不会，除非手动设置。</li>
+<li><code>GET</code>请求只能进行url编码，而<code>POST</code>支持多种编码方式。</li>
+<li><code>GET</code>请求参数会被完整保留在浏览器历史记录里，而<code>POST</code>中的参数不会被保留。</li>
+<li><code>GET</code>请求在URL中传送的参数是有长度限制的，而<code>POST</code>么有。</li>
+<li>对参数的数据类型，<code>GET</code>只接受ASCII字符，而<code>POST</code>没有限制。</li>
+<li><code>GET</code>比<code>POST</code>更不安全，因为参数直接暴露在URL上，所以不能用来传递敏感信息。</li>
+<li><code>GET</code>参数通过URL传递，<code>POST</code>放在Request body中。</li>
+</ol>
+<p><strong><code>GET</code>和<code>POST</code>使用场景：</strong><br>若符合下列任一情况，则用<code>POST</code>方法：</p>
+<ul>
+<li>请求的结果有持续性的副作用，例如，数据库内添加新的数据行。</li>
+<li>若使用<code>GET</code>方法，则表单上收集的数据可能让URL过长。</li>
+<li>要传送的数据不是采用7位的ASCII编码。</li>
+</ul>
+<p>若符合下列任一情况，则用<code>GET</code>方法：</p>
+<ul>
+<li>请求是为了查找资源，HTML表单数据仅用来帮助搜索。</li>
+<li>请求结果无持续性的副作用。</li>
+<li>收集的数据及HTML表单内的输入字段名称的总长不超过1024个字符。</li>
+</ul>
+<h2 id="四、常见AJAX面试题"><a href="#四、常见AJAX面试题" class="headerlink" title="四、常见AJAX面试题"></a>四、常见AJAX面试题</h2><h5 id="什么是AJAX？AJAX作用是什么？"><a href="#什么是AJAX？AJAX作用是什么？" class="headerlink" title="什么是AJAX？AJAX作用是什么？"></a><strong>什么是AJAX？AJAX作用是什么？</strong></h5><p><strong>详见本文内容</strong></p>
+<h5 id="原生JavaScript-AJAX请求有几个步骤？分别是什么？"><a href="#原生JavaScript-AJAX请求有几个步骤？分别是什么？" class="headerlink" title="原生JavaScript AJAX请求有几个步骤？分别是什么？"></a><strong>原生JavaScript AJAX请求有几个步骤？分别是什么？</strong></h5><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//创建 XMLHttpRequest 对象</span></span><br><span class="line"><span class="keyword">var</span> xhr = <span class="keyword">new</span> XMLHttpRequest();</span><br><span class="line"><span class="comment">//发送信息至服务器时内容编码类型</span></span><br><span class="line">xhr.setRequestHeader(<span class="string">"Content-type"</span>, <span class="string">"application/x-www-form-urlencoded"</span>); </span><br><span class="line"><span class="comment">//接受服务器响应数据</span></span><br><span class="line">xhr.onreadystatechange = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (xhr.readyState == <span class="number">4</span> &amp;&amp; (xhr.status == <span class="number">200</span>) &#123; </span><br><span class="line">		<span class="comment">// let data = xhr.responseText;  </span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="comment">//规定请求的类型、URL 以及是否异步处理请求。</span></span><br><span class="line">xhr.open(<span class="string">'GET'</span>,url,<span class="literal">true</span>);</span><br><span class="line"><span class="comment">//发送请求</span></span><br><span class="line">xhr.send(<span class="literal">null</span>);</span><br></pre></td></tr></table></figure>
+
+<h5 id="JSON字符串和JSON对象的相互转换"><a href="#JSON字符串和JSON对象的相互转换" class="headerlink" title="JSON字符串和JSON对象的相互转换"></a><strong>JSON字符串和JSON对象的相互转换</strong></h5><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//字符串转对象</span></span><br><span class="line"><span class="built_in">JSON</span>.parse(json)</span><br><span class="line"><span class="built_in">eval</span>(<span class="string">'('</span> + jsonstr + <span class="string">')'</span>)   </span><br><span class="line"></span><br><span class="line"><span class="comment">// 对象转字符串</span></span><br><span class="line"><span class="built_in">JSON</span>.stringify(json)</span><br></pre></td></tr></table></figure>
+
+<h5 id="AJAX几种请求方式？他们的优缺点？"><a href="#AJAX几种请求方式？他们的优缺点？" class="headerlink" title="AJAX几种请求方式？他们的优缺点？"></a><strong>AJAX几种请求方式？他们的优缺点？</strong></h5><p><strong>详见本文内容</strong></p>
+<h5 id="HTTP常见状态码有哪些？"><a href="#HTTP常见状态码有哪些？" class="headerlink" title="HTTP常见状态码有哪些？"></a><strong>HTTP常见状态码有哪些？</strong></h5><p><strong>详见本文内容</strong></p>
+<h5 id="什么情况造成跨域（同源策略）？"><a href="#什么情况造成跨域（同源策略）？" class="headerlink" title="什么情况造成跨域（同源策略）？"></a><strong>什么情况造成跨域（同源策略）？</strong></h5><p>同源策略是浏览器的一个安全功能，不同源的客户端脚本在没有明确授权的情况下，不能读写对方资源。所以xyz.com下的js脚本采用<code>Ajax</code>读取abc.com里面的文件数据是会被拒绝的。<br>同源策略限制了从同一个源加载的文档或脚本如何与来自另一个源的资源进行交互。这是一个用于隔离潜在恶意文件的重要安全机制。</p>
+<p><strong>举个例子：</strong><br><img src="https://image-static.segmentfault.com/814/843/814843408-5de5e201a6ff5_articlex" alt="avatar"><br><strong>不受同源策略限制的情况：</strong></p>
+<ol>
+<li>页面中的链接，重定向以及表单提交是不会受到同源策略限制的。</li>
+<li>跨域资源的引入是可以的。但是js不能读写加载的内容。如嵌入到页面中的script、img、link、iframe等。</li>
+</ol>
+<h5 id="跨域解决方案有哪些？"><a href="#跨域解决方案有哪些？" class="headerlink" title="跨域解决方案有哪些？"></a><strong>跨域解决方案有哪些？</strong></h5><ul>
+<li><p>JSONP 只能解决GET跨域(问的最多)</p>
+</li>
+<li><p><em>原理：*</em>动态创建一个script标签。利用script标签的src属性不受同源策略限制。因为所有的src属性和href属性都不受同源策略限制。可以请求第三方服务器数据内容。</p>
+</li>
+<li><p><em>步骤：*</em></p>
+<ol>
+<li>创建一个script标签</li>
+<li>script的src属性设置接口地址</li>
+<li>接口参数,必须要带一个自定义函数名 要不然后台无法返回数据。</li>
+<li>通过定义函数名去接收后台返回数据<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//去创建一个script标签</span></span><br><span class="line"><span class="keyword">var</span>  script = <span class="built_in">document</span>.createElement(<span class="string">"script"</span>);</span><br><span class="line"><span class="comment">//script的src属性设置接口地址 并带一个callback回调函数名称</span></span><br><span class="line">script.src = <span class="string">"http://127.0.0.1:8888/index.php?callback=jsonpCallback"</span>;</span><br><span class="line"><span class="comment">//插入到页面</span></span><br><span class="line"><span class="built_in">document</span>.head.appendChild(script);</span><br><span class="line"><span class="comment">//通过定义函数名去接收后台返回数据</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">jsonpCallback</span>(<span class="params">data</span>)</span>&#123;</span><br><span class="line">    <span class="comment">//注意：jsonp返回的数据是json对象可以直接使用</span></span><br><span class="line">    <span class="comment">//ajax 取得数据是json字符串需要转换成json对象才可以使用。</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+</li>
+<li><p>CORS：跨域资源共享</p>
+</li>
+<li><p><em>原理：服务器设置<code>Access-Control-Allow-OriginHTTP</code>响应头之后，浏览器将会允许跨域请求*</em></p>
+</li>
+<li><p><em>限制：浏览器需要支持HTML5，可以支持<code>POST</code>，<code>PUT</code>等方法兼容ie9以上*</em><br>需要后台设置</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Access-Control-Allow-Origin: *              <span class="comment">//允许所有域名访问，或者</span></span><br><span class="line">Access-Control-Allow-Origin: http:<span class="comment">//a.com   //只允许所有域名访问</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>设置 document.domain</strong></p>
+</li>
+<li><p><em>原理：相同主域名不同子域名下的页面，可以设置<code>document.domain</code>让它们同域*</em></p>
+</li>
+<li><p><em>限制：同域document提供的是页面间的互操作，需要载入iframe页面*</em></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// URL http://a.com/foo</span></span><br><span class="line"><span class="keyword">var</span> ifr = <span class="built_in">document</span>.createElement(<span class="string">'iframe'</span>);</span><br><span class="line">ifr.src = <span class="string">'http://b.a.com/bar'</span>; </span><br><span class="line">ifr.onload = <span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">    <span class="keyword">var</span> ifrdoc = ifr.contentDocument || ifr.contentWindow.document;</span><br><span class="line">    ifrdoc.getElementsById(<span class="string">"foo"</span>).innerHTML);</span><br><span class="line">&#125;;</span><br><span class="line">ifr.style.display = <span class="string">'none'</span>;</span><br><span class="line"><span class="built_in">document</span>.body.appendChild(ifr);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>ES5 postMessage</strong><br>ES5新增的 <code>postMessage()</code>方法允许来自不同源的脚本采用异步方式进行有限的通信，可以实现跨文本档、多窗口、跨域消息传递.<br>语法: </p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">postMessage(data,origin)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>用Apache做转发（逆向代理），让跨域变成同域</strong></p>
+</li>
+</ul>
+<h2 id="五、结束语"><a href="#五、结束语" class="headerlink" title="五、结束语"></a>五、结束语</h2><p>其实通过 <code>XMLHttpRequest</code>或者封装后的框架进行网络请求,这种方式已经有点老旧了，配置和调用方式非常混乱，近几年刚刚出来的Fetch提供了一个更好的替代方法，它不仅提供了一种简单，合乎逻辑的方式来跨网络异步获取资源，而且可以很容易地被其他技术使用。</p>
+<hr>
+<p><strong>推荐阅读：</strong><br><a href="https://segmentfault.com/blog/cloudysjavascript" target="_blank" rel="noopener">【专题：JavaScript进阶之路】</a><br><a href="https://segmentfault.com/a/1190000020934044" target="_blank" rel="noopener">ES6 Promise</a><br><a href="https://segmentfault.com/a/1190000021056692" target="_blank" rel="noopener">JavaScript之函数柯理化</a><br><a href="https://segmentfault.com/a/1190000020694801" target="_blank" rel="noopener">ES6 尾调用和尾递归</a><br><a href="https://segmentfault.com/a/1190000019429417" target="_blank" rel="noopener">Git常用命令小结</a><br><a href="https://segmentfault.com/a/1190000020969313" target="_blank" rel="noopener">浅谈 MVC 和 MVVM 模型</a></p>
+<p><strong>参考：</strong></p>
+<ul>
+<li><a href="https://www.cnblogs.com/fuzitu/p/8565458.html" target="_blank" rel="noopener">ajax常见的面试问题 - 斧子兔 - 博客园</a></li>
+<li><a href="https://github.com/ljianshu/Blog/issues/45" target="_blank" rel="noopener">Ajax原理一篇就够了 · Issue #45 · ljianshu/Blog · GitHub</a></li>
+<li><a href="https://www.liaoxuefeng.com/wiki/001434446689867b27157e896e74d51a89c25cc8b43bdb3000/001434499861493e7c35be5e0864769a2c06afb4754acc6000" target="_blank" rel="noopener">javascript教程</a> </li>
+<li><a href="https://www.ibm.com/developerworks/cn/web/wa-aj-ajaxhistory/index.html" target="_blank" rel="noopener">Ajax 简介</a> </li>
+<li><a href="https://juejin.im/post/5a1e11b86fb9a0451d413977" target="_blank" rel="noopener">再也不学AJAX了！（一）AJAX概述</a> </li>
+<li><a href="http://www.runoob.com/http/http-tutorial.html" target="_blank" rel="noopener">HTTP菜鸟教程</a> </li>
+<li><a href="https://juejin.im/post/5a31d0685188253da72e7458" target="_blank" rel="noopener">AJAX的<code>POST</code>和<code>GET</code>请求的区别</a> </li>
+<li><a href="https://developer.mozilla.org/zh-CN/docs/Web/Guide/AJAX" target="_blank" rel="noopener">Ajax MDN文档</a></li>
+</ul>
+
+  </article>
+  <aside class="table-content" id="site-toc">
+  <div class="table-content-title">
+    <i class="fa fa-arrow-right fa-lg" id="site-toc-hide-btn"></i>
+    <span>目录</span>
+  </div>
+  <div class="table-content-main">
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#引语"><span class="toc-text">引语</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#一、什么是AJAX"><span class="toc-text">一、什么是AJAX</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#二、AJAX原理是什么"><span class="toc-text">二、AJAX原理是什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#三、AJAX的使用"><span class="toc-text">三、AJAX的使用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-创建Ajax核心对象XMLHttpRequest-记得考虑兼容性"><span class="toc-text">1.创建Ajax核心对象XMLHttpRequest(记得考虑兼容性)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-向服务器发送请求"><span class="toc-text">2.向服务器发送请求</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-服务器响应处理（区分同步跟异步两种情况）"><span class="toc-text">3.服务器响应处理（区分同步跟异步两种情况）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-GET和POST请求数据区别"><span class="toc-text">4.GET和POST请求数据区别</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#四、常见AJAX面试题"><span class="toc-text">四、常见AJAX面试题</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#什么是AJAX？AJAX作用是什么？"><span class="toc-text">什么是AJAX？AJAX作用是什么？</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#原生JavaScript-AJAX请求有几个步骤？分别是什么？"><span class="toc-text">原生JavaScript AJAX请求有几个步骤？分别是什么？</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#JSON字符串和JSON对象的相互转换"><span class="toc-text">JSON字符串和JSON对象的相互转换</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#AJAX几种请求方式？他们的优缺点？"><span class="toc-text">AJAX几种请求方式？他们的优缺点？</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#HTTP常见状态码有哪些？"><span class="toc-text">HTTP常见状态码有哪些？</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#什么情况造成跨域（同源策略）？"><span class="toc-text">什么情况造成跨域（同源策略）？</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#跨域解决方案有哪些？"><span class="toc-text">跨域解决方案有哪些？</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#五、结束语"><span class="toc-text">五、结束语</span></a></li></ol>
+  </div>
+</aside>
+  
+    <aside class="passage-copyright">
+      <div>本文作者: Cloudy</div>
+      
+        <div>
+          原文链接: 
+          <a href="" target="_blank">http://yoursite.com/2019/12/03/AJAX%E5%8E%9F%E7%90%86/</a>
+        </div>
+      
+      <div>
+        版权声明: 本博客所有文章除特别声明外, 均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener">CC BY-NC-SA 4.0</a> 许可协议. 转载请注明出处!
+      </div>
+    </aside>
+  
+  
+    <div class="passage-tags">
+     
+      <a href="/tags/%E8%B7%A8%E5%9F%9F/"><i class="fa fa-tags"></i>跨域</a>
+     
+      <a href="/tags/JavaScript/"><i class="fa fa-tags"></i>JavaScript</a>
+     
+      <a href="/tags/Ajax/"><i class="fa fa-tags"></i>Ajax</a>
+     
+      <a href="/tags/HTTP/"><i class="fa fa-tags"></i>HTTP</a>
+    
+    </div>
+  
+</div>
+
+    </main>
+    
+      
+<div class="site-comment-contanier" data-plateform="leancloud">
+  
+    <p id="site-comment-info">
+      <i class="fa fa-spinner fa-spin"></i> 评论加载中
+    </p>
+    <div id="site-comment"></div>
+  
+</div>
+    
+    <div class="site-footer-wrapper">
+  <footer class="site-footer">
+    
+      
+        <div class="site-footer-col">
+          <h5 class="site-footer-title">博客推荐</h5>
+          
+            <span class="site-footer-item">
+              <a href="https://github.com/Cloudyttt/Cloudyttt.github.io" target="_blank">Cloudyttt</a>
+            </span>
+          
+            <span class="site-footer-item">
+              <a href="https://github.com/Cloudyttt/Cloudyttt.github.io" target="_blank">Cloudy</a>
+            </span>
+          
+        </div>
+      
+        <div class="site-footer-col">
+          <h5 class="site-footer-title">系列教程</h5>
+          
+            <span class="site-footer-item">
+              <a href="https://cn.vuejs.org/" target="_blank">Vue</a>
+            </span>
+          
+            <span class="site-footer-item">
+              <a href="http://nodejs.cn/" target="_blank">Nodejs</a>
+            </span>
+          
+        </div>
+      
+        <div class="site-footer-col">
+          <h5 class="site-footer-title">抓到我</h5>
+          
+            <span class="site-footer-item">
+              <a href="https://juejin.im/user/5acdb1af5188257cc20da3f4" target="_blank">掘金</a>
+            </span>
+          
+            <span class="site-footer-item">
+              <a href="https://segmentfault.com/u/cloudyttt" target="_blank">思否</a>
+            </span>
+          
+        </div>
+      
+    
+    <div class="site-footer-info">
+      <i class="fa fa-clock-o"></i> 本站已稳定运行<span id="site-time"></span>
+    </div>
+    
+      <div class="site-footer-info">
+        <i class="fa fa-paw"></i> 您是本站第 <span id="site-count"></span> 位访客
+      </div>
+    
+    
+      <div class="site-footer-info">
+        <i class="fa fa-at"></i> Email: cloudyhaotian@qq.com
+      </div>
+    
+    <!--<div class="site-footer-info">
+      <i class="fa fa-copyright"></i>
+      2019 <a href="https://github.com/dongyuanxin/theme-ad/" target="_blank">Theme-AD</a>.
+      Created by <a href="https://godbmw.com/" target="_blank">GodBMW</a>.
+      All rights reserved.
+    </div>-->
+  </footer>
+</div>
+
+    <div id="site-layer" style="display:none;">
+  <div class="site-layer-content">
+    <div class="site-layer-header">
+      <span class="site-layer-header-title" id="site-layer-title"></span>
+      <i class="fa fa-close" id="site-layer-close"></i>
+    </div>
+    <div class="site-layer-body" id="site-layer-container">
+      <div class="site-layer-input" id="site-layer-search" style="display: none;">
+        <div class="site-layer-input-choose">
+          <a href="javascript:void(0);" target="_blank" rel="noopener" title="Change Search Engine">Google</a>
+        </div>
+        <input type="text">
+        <i class="fa fa-search"></i>
+      </div>
+      
+        <div class="site-layer-reward" id="site-layer-reward" style="display: none;">
+          
+            <div>
+              <img src="/images/wechat.jpeg" alt="WeChat">
+              
+                <p>WeChat</p>
+              
+            </div>
+          
+            <div>
+              <img src="/images/alipay.jpeg" alt="AliPay">
+              
+                <p>AliPay</p>
+              
+            </div>
+          
+        </div>
+      
+      <div id="site-layer-welcome" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+    
+
+<div class="bottom-bar">
+  <div class="bottom-bar-left">
+    <a href="javascript:void(0);" target="_blank" rel="noopener" data-enable="false">
+      <i class="fa fa-arrow-left"></i>
+    </a>
+    <a href="/2019/12/02/JavaScript%E4%B8%AD%E7%9A%84%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E5%88%A4%E6%96%AD/" data-enable="true">
+      <i class="fa fa-arrow-right"></i>
+    </a>
+  </div>
+  <div class="bottom-bar-right">
+    <a href="javascript:void(0);" target="_blank" rel="noopener" data-enable="true" id="site-toc-show-btn">
+      <i class="fa fa-bars"></i>
+    </a>
+    
+      <a href="#site-comment" data-enable="true">
+        <i class="fa fa-commenting"></i>
+      </a>
+    
+    <a href="javascript:void(0);" target="_blank" rel="noopener" id="site-toggle-share-btn">
+      <i class="fa fa-share-alt"></i>
+    </a>
+    
+      <a href="javascript:void(0);" target="_blank" rel="noopener" id="site-reward">
+        <i class="fa fa-thumbs-up"></i>
+      </a>
+    
+    <a href="javascript:void(0);" target="_blank" rel="noopener" id="back-top-btn">
+      <i class="fa fa-chevron-up"></i>
+    </a>
+  </div>
+</div>
+    <div id="share-btn">
+  
+    <a id="share-btn-twitter" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-twitter"></i>
+    </a>
+  
+  
+    <a id="share-btn-facebook" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-facebook"></i>
+    </a>
+  
+  
+    <a id="share-btn-weibo" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-weibo"></i>
+    </a>
+  
+  
+    <a id="share-btn-qq" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-qq"></i>
+    </a>
+  
+  
+    <a id="share-btn-wechat" href="javascript:void(0);" target="_blank">
+      <i class="fa fa-wechat"></i>
+    </a>
+  
+</div>
+    
+  <script async src="https://www.googletagmanager.com/gtag/js?id="></script>
+  <script async>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', '');
+  </script>
+
+
+
+  <script async>
+  (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      if (curProtocol === 'https') {
+          bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+      }
+      else {
+          bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+      }
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+  })();
+  </script>
+
+
+
+
+    
+  </body>
+</html>
